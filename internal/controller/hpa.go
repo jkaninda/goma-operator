@@ -83,6 +83,7 @@ func createHpa(r GatewayReconciler, ctx context.Context, req ctrl.Request, gatew
 		}
 		logger.Info("Created HorizontalPodAutoscaler", "HorizontalPodAutoscaler.Name", hpa.Name)
 	} else {
+		logger.Info("HorizontalPodAutoscaler already exists", "HorizontalPodAutoscaler.Name", hpa.Name)
 		// Update the Deployment if the spec has changed
 		if !equalHpaSpec(existHpa, *hpa) {
 			existHpa.Spec = hpa.Spec
@@ -98,17 +99,16 @@ func createHpa(r GatewayReconciler, ctx context.Context, req ctrl.Request, gatew
 
 // Helper function to compare Deployment specs
 func equalHpaSpec(existing, desired autoscalingv2.HorizontalPodAutoscaler) bool {
-	// A deep equality check or field-by-field comparison would be more accurate
-	if existing.Spec.MinReplicas != desired.Spec.MinReplicas {
+	if *existing.Spec.MinReplicas != *desired.Spec.MinReplicas {
 		return false
 	}
 	if existing.Spec.MaxReplicas != desired.Spec.MaxReplicas {
 		return false
 	}
-	if existing.Spec.Metrics[0].Resource.Target.AverageUtilization != desired.Spec.Metrics[0].Resource.Target.AverageUtilization {
+	if *existing.Spec.Metrics[0].Resource.Target.AverageUtilization != *desired.Spec.Metrics[0].Resource.Target.AverageUtilization {
 		return false
 	}
-	if existing.Spec.Metrics[1].Resource.Target.AverageUtilization != desired.Spec.Metrics[1].Resource.Target.AverageUtilization {
+	if *existing.Spec.Metrics[1].Resource.Target.AverageUtilization != *desired.Spec.Metrics[1].Resource.Target.AverageUtilization {
 		return false
 	}
 	return true

@@ -2,7 +2,6 @@ package controller
 
 import (
 	"context"
-	"fmt"
 	"slices"
 	"strings"
 
@@ -35,8 +34,6 @@ func gatewayConfig(r GatewayReconciler, ctx context.Context, req ctrl.Request, g
 		logger.Error(err, "Failed to list Middlewares")
 		return *gomaConfig
 	}
-	logger.Info(fmt.Sprintf("Listing Routes: size: %d", len(routes.Items)))
-
 	for _, route := range routes.Items {
 		logger.Info("Found Route", "Name", route.Name)
 		if route.Spec.Gateway == gateway.Name {
@@ -76,8 +73,6 @@ func updateGatewayConfig(r RouteReconciler, ctx context.Context, req ctrl.Reques
 		logger.Error(err, "Failed to list Middlewares")
 		return err
 	}
-	logger.Info(fmt.Sprintf("Listing Routes: size: %d", len(routes.Items)))
-
 	for _, route := range routes.Items {
 		logger.Info("Found Route", "Name", route.Name)
 		if route.Spec.Gateway == gateway.Name {

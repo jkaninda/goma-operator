@@ -18,8 +18,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log"
 )
 
-// createDeployment creates Kubernetes deployment
-func createDeployment(r GatewayReconciler, ctx context.Context, req ctrl.Request, gateway gomaprojv1beta1.Gateway, imageName string) error {
+// createUpdateDeployment creates Kubernetes deployment
+func createUpdateDeployment(r GatewayReconciler, ctx context.Context, req ctrl.Request, gateway gomaprojv1beta1.Gateway, imageName string) error {
 	logger := log.FromContext(ctx)
 	// Define the desired Deployment
 	deployment := &v1.Deployment{
