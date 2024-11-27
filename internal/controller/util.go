@@ -6,7 +6,7 @@ func mapToGateway(g gomaprojv1beta1.GatewaySpec) Gateway {
 	return Gateway{
 		SSLKeyFile:                   "",
 		SSLCertFile:                  "",
-		Redis:                        Redis{},
+		Redis:                        g.Server.Redis,
 		WriteTimeout:                 g.Server.WriteTimeout,
 		ReadTimeout:                  g.Server.ReadTimeout,
 		IdleTimeout:                  g.Server.IdleTimeout,
