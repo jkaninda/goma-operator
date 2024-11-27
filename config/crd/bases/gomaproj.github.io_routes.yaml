@@ -1,0 +1,139 @@
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.16.4
+  name: routes.gomaproj.github.io
+spec:
+  group: gomaproj.github.io
+  names:
+    kind: Route
+    listKind: RouteList
+    plural: routes
+    singular: route
+  scope: Namespaced
+  versions:
+  - name: v1beta1
+    schema:
+      openAPIV3Schema:
+        description: Route is the Schema for the routes API.
+        properties:
+          apiVersion:
+            description: |-
+              APIVersion defines the versioned schema of this representation of an object.
+              Servers should convert recognized schemas to the latest internal value, and
+              may reject unrecognized values.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
+            type: string
+          kind:
+            description: |-
+              Kind is a string value representing the REST resource this object represents.
+              Servers may infer this from the endpoint the client submits requests to.
+              Cannot be updated.
+              In CamelCase.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: RouteSpec defines the desired state of Route.
+            properties:
+              gateway:
+                type: string
+              routes:
+                items:
+                  properties:
+                    backends:
+                      items:
+                        type: string
+                      type: array
+                    blockCommonExploits:
+                      description: BlockCommonExploits enable, disable block common
+                        exploits
+                      type: boolean
+                    cors:
+                      description: Cors contains the route cors headers
+                      properties:
+                        headers:
+                          additionalProperties:
+                            type: string
+                          description: Headers contains custom headers
+                          type: object
+                        origins:
+                          description: Cors contains Allowed origins,
+                          items:
+                            type: string
+                          type: array
+                      type: object
+                    destination:
+                      description: Destination Defines backend URL
+                      type: string
+                    disableHostFording:
+                      description: DisableHostFording Disable host forwarding.
+                      type: boolean
+                    healthCheck:
+                      description: HealthCheck Defines the backend is health
+                      properties:
+                        healthyStatuses:
+                          items:
+                            type: integer
+                          type: array
+                        interval:
+                          type: string
+                        path:
+                          type: string
+                        timeout:
+                          type: string
+                      type: object
+                    hosts:
+                      description: Hosts Domains/hosts based request routing
+                      items:
+                        type: string
+                      type: array
+                    insecureSkipVerify:
+                      type: boolean
+                    interceptErrors:
+                      description: InterceptErrors intercepts backend errors based
+                        on the status codes
+                      items:
+                        type: integer
+                      type: array
+                    methods:
+                      description: Methods allowed method
+                      items:
+                        type: string
+                      type: array
+                    middlewares:
+                      description: Middlewares Defines route middleware
+                      items:
+                        type: string
+                      type: array
+                    name:
+                      description: Name defines route name
+                      type: string
+                    path:
+                      description: Path defines route path
+                      type: string
+                    rateLimit:
+                      type: integer
+                    rewrite:
+                      description: Rewrite rewrites route path to desired path
+                      type: string
+                  required:
+                  - name
+                  - path
+                  type: object
+                type: array
+            required:
+            - gateway
+            - routes
+            type: object
+          status:
+            description: RouteStatus defines the observed state of Route.
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}

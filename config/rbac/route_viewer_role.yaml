@@ -1,0 +1,23 @@
+# permissions for end users to view routes.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/name: goma-operator
+    app.kubernetes.io/managed-by: kustomize
+  name: route-viewer-role
+rules:
+- apiGroups:
+  - gomaproj.github.io
+  resources:
+  - routes
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - gomaproj.github.io
+  resources:
+  - routes/status
+  verbs:
+  - get

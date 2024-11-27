@@ -1,0 +1,6 @@
+## Append samples of your project ##
+resources:
+- gomaproj_v1beta1_gateway.yaml
+- gomaproj_v1beta1_route.yaml
+- gomaproj_v1beta1_middleware.yaml
+# +kubebuilder:scaffold:manifestskustomizesamples

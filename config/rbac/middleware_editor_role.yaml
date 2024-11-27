@@ -1,0 +1,27 @@
+# permissions for end users to edit middlewares.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/name: goma-operator
+    app.kubernetes.io/managed-by: kustomize
+  name: middleware-editor-role
+rules:
+- apiGroups:
+  - gomaproj.github.io
+  resources:
+  - middlewares
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - gomaproj.github.io
+  resources:
+  - middlewares/status
+  verbs:
+  - get

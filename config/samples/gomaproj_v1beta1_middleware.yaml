@@ -1,0 +1,14 @@
+apiVersion: gomaproj.github.io/v1beta1
+kind: Middleware
+metadata:
+  labels:
+    app.kubernetes.io/name: goma-operator
+    app.kubernetes.io/managed-by: kustomize
+  name: middleware-sample
+spec:
+  type: basic
+  paths:
+    - /*
+  rule:
+    username: admin
+    password: admin
