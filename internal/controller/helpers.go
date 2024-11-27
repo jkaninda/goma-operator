@@ -21,6 +21,13 @@ func gatewayConfig(r GatewayReconciler, ctx context.Context, req ctrl.Request, g
 	gomaConfig := &GatewayConfig{}
 	gomaConfig.Version = GatewayConfigVersion
 	gomaConfig.Gateway = mapToGateway(gateway.Spec)
+
+	// attach cert files
+	if len(gateway.Spec.Server.TlsSecretName) != 0 {
+		gomaConfig.Gateway.SSLKeyFile = TLSKeyFile
+		gomaConfig.Gateway.SSLCertFile = TLSCertFile
+	}
+
 	labelSelector := client.MatchingLabels{}
 	var middlewareNames []string
 	// List ConfigMaps in the namespace with the matching label
@@ -60,6 +67,11 @@ func updateGatewayConfig(r RouteReconciler, ctx context.Context, req ctrl.Reques
 	gomaConfig := &GatewayConfig{}
 	gomaConfig.Version = GatewayConfigVersion
 	gomaConfig.Gateway = mapToGateway(gateway.Spec)
+	// attach cert files
+	if len(gateway.Spec.Server.TlsSecretName) != 0 {
+		gomaConfig.Gateway.SSLKeyFile = TLSKeyFile
+		gomaConfig.Gateway.SSLCertFile = TLSCertFile
+	}
 	labelSelector := client.MatchingLabels{}
 	var middlewareNames []string
 	// List ConfigMaps in the namespace with the matching label

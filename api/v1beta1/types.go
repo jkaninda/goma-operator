@@ -36,6 +36,8 @@ type Server struct {
 	IdleTimeout int `json:"idleTimeout,omitempty" yaml:"idleTimeout,omitempty"`
 	// LogLevel log level, info, debug, trace, off
 	LogLevel string `json:"logLevel,omitempty" yaml:"logLevel,omitempty"`
+	// tls secret name
+	TlsSecretName string `json:"tlsSecretName,omitempty" yaml:"tlsSecretName,omitempty"`
 	// Redis contains redis database details
 	Redis Redis `json:"redis,omitempty" yaml:"redis,omitempty"`
 	// Cors holds proxy global cors
