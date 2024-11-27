@@ -19,21 +19,19 @@ package controller
 import (
 	"context"
 	"fmt"
-	v1 "k8s.io/api/apps/v1"
-	autoscalingv1 "k8s.io/api/autoscaling/v1"
-	"strings"
-
 	gomaprojv1beta1 "github.com/jkaninda/goma-operator/api/v1beta1"
 	"gopkg.in/yaml.v3"
+	v1 "k8s.io/api/apps/v1"
+	autoscalingv1 "k8s.io/api/autoscaling/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/types"
-	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
-
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/log"
+	"strings"
 )
 
 // GatewayReconciler reconciles a Gateway object
@@ -157,7 +155,7 @@ func (r *GatewayReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		}
 
 	}
-	err = createDeployment(*r, ctx, req, *gateway, imageName)
+	err = createUpdateDeployment(*r, ctx, req, *gateway, imageName)
 	if err != nil {
 		addCondition(&gateway.Status, "DeploymentNotReady", metav1.ConditionFalse, "DeploymentNotReady", "Failed to created deployment for Gateway")
 		logger.Error(err, "Failed to create Deployment")
@@ -185,11 +183,10 @@ func (r *GatewayReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 
 	}
 	gateway.Status.Routes = int32(len(gomaConfig.Gateway.Routes))
-	if err := r.updateStatus(ctx, gateway); err != nil {
+	if err = r.updateStatus(ctx, gateway); err != nil {
 		logger.Error(err, "Failed to update resource status")
 		return ctrl.Result{}, err
 	}
-
 	logger.Info("Successfully updated resource status")
 	return ctrl.Result{}, nil
 }

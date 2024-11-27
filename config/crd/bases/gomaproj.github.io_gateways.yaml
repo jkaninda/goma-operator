@@ -1082,6 +1082,18 @@ spec:
                   readTimeout:
                     description: ReadTimeout defines proxy read timeout
                     type: integer
+                  redis:
+                    description: Redis contains redis database details
+                    properties:
+                      addr:
+                        description: 'Addr redis hostname and port number :'
+                        type: string
+                      password:
+                        type: string
+                    type: object
+                  tlsSecretName:
+                    description: tls secret name
+                    type: string
                   writeTimeout:
                     description: WriteTimeout defines proxy write timeout
                     type: integer

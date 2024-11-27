@@ -2,7 +2,6 @@ package controller
 
 import (
 	"context"
-	"fmt"
 	"slices"
 	"strings"
 
@@ -22,6 +21,13 @@ func gatewayConfig(r GatewayReconciler, ctx context.Context, req ctrl.Request, g
 	gomaConfig := &GatewayConfig{}
 	gomaConfig.Version = GatewayConfigVersion
 	gomaConfig.Gateway = mapToGateway(gateway.Spec)
+
+	// attach cert files
+	if len(gateway.Spec.Server.TlsSecretName) != 0 {
+		gomaConfig.Gateway.SSLKeyFile = TLSKeyFile
+		gomaConfig.Gateway.SSLCertFile = TLSCertFile
+	}
+
 	labelSelector := client.MatchingLabels{}
 	var middlewareNames []string
 	// List ConfigMaps in the namespace with the matching label
@@ -35,8 +41,6 @@ func gatewayConfig(r GatewayReconciler, ctx context.Context, req ctrl.Request, g
 		logger.Error(err, "Failed to list Middlewares")
 		return *gomaConfig
 	}
-	logger.Info(fmt.Sprintf("Listing Routes: size: %d", len(routes.Items)))
-
 	for _, route := range routes.Items {
 		logger.Info("Found Route", "Name", route.Name)
 		if route.Spec.Gateway == gateway.Name {
@@ -63,6 +67,11 @@ func updateGatewayConfig(r RouteReconciler, ctx context.Context, req ctrl.Reques
 	gomaConfig := &GatewayConfig{}
 	gomaConfig.Version = GatewayConfigVersion
 	gomaConfig.Gateway = mapToGateway(gateway.Spec)
+	// attach cert files
+	if len(gateway.Spec.Server.TlsSecretName) != 0 {
+		gomaConfig.Gateway.SSLKeyFile = TLSKeyFile
+		gomaConfig.Gateway.SSLCertFile = TLSCertFile
+	}
 	labelSelector := client.MatchingLabels{}
 	var middlewareNames []string
 	// List ConfigMaps in the namespace with the matching label
@@ -76,8 +85,6 @@ func updateGatewayConfig(r RouteReconciler, ctx context.Context, req ctrl.Reques
 		logger.Error(err, "Failed to list Middlewares")
 		return err
 	}
-	logger.Info(fmt.Sprintf("Listing Routes: size: %d", len(routes.Items)))
-
 	for _, route := range routes.Items {
 		logger.Info("Found Route", "Name", route.Name)
 		if route.Spec.Gateway == gateway.Name {

@@ -18,9 +18,47 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log"
 )
 
-// createDeployment creates Kubernetes deployment
-func createDeployment(r GatewayReconciler, ctx context.Context, req ctrl.Request, gateway gomaprojv1beta1.Gateway, imageName string) error {
+// createUpdateDeployment creates Kubernetes deployment
+func createUpdateDeployment(r GatewayReconciler, ctx context.Context, req ctrl.Request, gateway gomaprojv1beta1.Gateway, imageName string) error {
 	logger := log.FromContext(ctx)
+	var volumes []corev1.Volume
+	var volumeMounts []corev1.VolumeMount
+
+	volumes = append(volumes, corev1.Volume{
+		Name: "config",
+		VolumeSource: corev1.VolumeSource{
+			ConfigMap: &corev1.ConfigMapVolumeSource{
+				LocalObjectReference: corev1.LocalObjectReference{
+					Name: req.Name,
+				},
+			},
+		},
+	})
+	volumeMounts = append(volumeMounts, corev1.VolumeMount{
+		Name:      "config",
+		MountPath: ConfigPath,
+		ReadOnly:  true,
+	})
+	if len(gateway.Spec.Server.TlsSecretName) != 0 {
+		volumes = append(volumes, corev1.Volume{
+			Name: req.Name,
+			VolumeSource: corev1.VolumeSource{
+				Secret: &corev1.SecretVolumeSource{
+					SecretName: gateway.Spec.Server.TlsSecretName,
+				},
+			},
+		})
+		volumeMounts = append(volumeMounts, corev1.VolumeMount{
+			Name:      req.Name,
+			ReadOnly:  true,
+			MountPath: CertsPath,
+		})
+
+	}
+	// check if ReplicaCount is defined
+	if gateway.Spec.ReplicaCount != 0 {
+		ReplicaCount = gateway.Spec.ReplicaCount
+	}
 	// Define the desired Deployment
 	deployment := &v1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
@@ -29,7 +67,7 @@ func createDeployment(r GatewayReconciler, ctx context.Context, req ctrl.Request
 			Labels:    gateway.Labels,
 		},
 		Spec: v1.DeploymentSpec{
-			Replicas: int32Ptr(gateway.Spec.ReplicaCount), // Set desired replicas
+			Replicas: int32Ptr(ReplicaCount), // Set desired replicas
 			Selector: &metav1.LabelSelector{
 				MatchLabels: map[string]string{
 					"app":        req.Name,
@@ -81,28 +119,11 @@ func createDeployment(r GatewayReconciler, ctx context.Context, req ctrl.Request
 									},
 								},
 							},
-							Resources: gateway.Spec.Resources,
-							VolumeMounts: []corev1.VolumeMount{
-								{
-									Name:      "config",
-									MountPath: "/etc/goma",
-									ReadOnly:  true,
-								},
-							},
+							Resources:    gateway.Spec.Resources,
+							VolumeMounts: volumeMounts,
 						},
 					},
-					Volumes: []corev1.Volume{
-						{
-							Name: "config",
-							VolumeSource: corev1.VolumeSource{
-								ConfigMap: &corev1.ConfigMapVolumeSource{
-									LocalObjectReference: corev1.LocalObjectReference{
-										Name: req.Name,
-									},
-								},
-							},
-						},
-					},
+					Volumes: volumes,
 				},
 			},
 		},

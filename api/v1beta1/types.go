@@ -36,6 +36,10 @@ type Server struct {
 	IdleTimeout int `json:"idleTimeout,omitempty" yaml:"idleTimeout,omitempty"`
 	// LogLevel log level, info, debug, trace, off
 	LogLevel string `json:"logLevel,omitempty" yaml:"logLevel,omitempty"`
+	// tls secret name
+	TlsSecretName string `json:"tlsSecretName,omitempty" yaml:"tlsSecretName,omitempty"`
+	// Redis contains redis database details
+	Redis Redis `json:"redis,omitempty" yaml:"redis,omitempty"`
 	// Cors holds proxy global cors
 	Cors Cors `json:"cors,omitempty" yaml:"cors,omitempty,omitempty"`
 	// InterceptErrors holds the status codes to intercept the error from backend
@@ -84,4 +88,9 @@ type RouteHealthCheck struct {
 	Interval        string `json:"interval,omitempty" yaml:"interval"`
 	Timeout         string `json:"timeout,omitempty" yaml:"timeout"`
 	HealthyStatuses []int  `json:"healthyStatuses,omitempty" yaml:"healthyStatuses"`
+}
+type Redis struct {
+	// Addr redis hostname and port number :
+	Addr     string `json:"addr,omitempty" yaml:"addr,omitempty"`
+	Password string `json:"password,omitempty" yaml:"password,omitempty"`
 }

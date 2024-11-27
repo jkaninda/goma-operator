@@ -9,7 +9,7 @@ type Gateway struct {
 	// SSLKeyFile SSL Private key  file
 	SSLKeyFile string `yaml:"sslKeyFile"`
 	// Redis contains redis database details
-	Redis Redis `yaml:"redis"`
+	Redis gomaprojv1beta1.Redis `yaml:"redis"`
 	// WriteTimeout defines proxy write timeout
 	WriteTimeout int `yaml:"writeTimeout"`
 	// ReadTimeout defines proxy read timeout
