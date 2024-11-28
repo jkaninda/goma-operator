@@ -203,7 +203,7 @@ func equalDeploymentSpec(existing, desired v1.DeploymentSpec, autoScalingEnabled
 	}
 	return true
 }
-func (r *RouteReconciler) RestartDeployment(ctx context.Context, req ctrl.Request, gateway gomaprojv1beta1.Gateway) error {
+func restartDeployment(r client.Client, ctx context.Context, req ctrl.Request, gateway *gomaprojv1beta1.Gateway) error {
 	logger := log.FromContext(ctx)
 	// Fetch the Deployment
 	var deployment v1.Deployment

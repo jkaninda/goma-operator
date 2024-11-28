@@ -31,6 +31,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/log"
+	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"strings"
 )
 
@@ -151,6 +152,11 @@ func (r *GatewayReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 				addCondition(&gateway.Status, "ConfigMapReady", metav1.ConditionFalse, "ConfigMapReady", "Failed to update ConfigMap for Gateway")
 				return ctrl.Result{}, err
 			}
+			if err = restartDeployment(r.Client, ctx, req, gateway); err != nil {
+				logger.Error(err, "Failed to restart Deployment")
+				return ctrl.Result{}, err
+
+			}
 			logger.Info("Updated ConfigMap", "ConfigMap.Name", configMap.Name)
 		}
 
@@ -192,11 +198,6 @@ func (r *GatewayReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 }
 func (r *GatewayReconciler) updateStatus(ctx context.Context, gateway *gomaprojv1beta1.Gateway) error {
 	return r.Client.Status().Update(ctx, gateway)
-}
-
-// Helper function to return a pointer to an int32
-func int32Ptr(i int32) *int32 {
-	return &i
 }
 
 func addCondition(status *gomaprojv1beta1.GatewayStatus, condType string, statusType metav1.ConditionStatus, reason, message string) {
@@ -291,8 +292,10 @@ func (r *GatewayReconciler) finalize(ctx context.Context, gateway *gomaprojv1bet
 
 // SetupWithManager sets up the controller with the Manager.
 func (r *GatewayReconciler) SetupWithManager(mgr ctrl.Manager) error {
+	pred := predicate.GenerationChangedPredicate{}
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&gomaprojv1beta1.Gateway{}).
+		WithEventFilter(pred).
 		Owns(&corev1.ConfigMap{}).                      // Watch ConfigMaps created by the controller
 		Owns(&v1.Deployment{}).                         // Watch Deployments created by the controller
 		Owns(&corev1.Service{}).                        // Watch Services created by the controller

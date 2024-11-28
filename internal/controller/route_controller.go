@@ -65,15 +65,16 @@ func (r *RouteReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		logger.Error(err, "Failed to fetch Gateway")
 		return ctrl.Result{}, err
 	}
-	err := updateGatewayConfig(*r, ctx, req, gateway)
+	ok, err := updateGatewayConfig(*r, ctx, req, gateway)
 	if err != nil {
 		return ctrl.Result{}, err
 	}
-	//
-	if err = r.RestartDeployment(ctx, req, gateway); err != nil {
-		logger.Error(err, "Failed to restart Deployment")
-		return ctrl.Result{}, err
+	if ok {
+		if err = restartDeployment(r.Client, ctx, req, &gateway); err != nil {
+			logger.Error(err, "Failed to restart Deployment")
+			return ctrl.Result{}, err
 
+		}
 	}
 	return ctrl.Result{}, nil
 }
