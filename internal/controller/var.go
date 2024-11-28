@@ -11,7 +11,7 @@ const (
 	RateLimit            = "rateLimit"
 	BelongsTo            = "goma-gateway"
 	GatewayConfigVersion = "1.0"
-	FinalizerName        = "finalizer.gomaproj.jonaskaninda.com"
+	FinalizerName        = "gomaproj.github.io/resources.finalizer"
 	ConfigName           = "goma.yml"
 	TLSCertFile          = "/etc/goma/certs/tls.crt"
 	TLSKeyFile           = "/etc/goma/certs/tls.key"

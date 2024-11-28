@@ -62,7 +62,7 @@ func gatewayConfig(r GatewayReconciler, ctx context.Context, req ctrl.Request, g
 	}
 	return *gomaConfig
 }
-func updateGatewayConfig(r RouteReconciler, ctx context.Context, req ctrl.Request, gateway gomaprojv1beta1.Gateway) error {
+func updateGatewayConfig(r RouteReconciler, ctx context.Context, req ctrl.Request, gateway gomaprojv1beta1.Gateway) (bool, error) {
 	logger := log.FromContext(ctx)
 	gomaConfig := &GatewayConfig{}
 	gomaConfig.Version = GatewayConfigVersion
@@ -78,12 +78,12 @@ func updateGatewayConfig(r RouteReconciler, ctx context.Context, req ctrl.Reques
 	var routes gomaprojv1beta1.RouteList
 	if err := r.List(ctx, &routes, labelSelector, client.InNamespace(req.Namespace)); err != nil {
 		logger.Error(err, "Failed to list Routes")
-		return err
+		return false, err
 	}
 	var middlewares gomaprojv1beta1.MiddlewareList
 	if err := r.List(ctx, &middlewares, labelSelector, client.InNamespace(req.Namespace)); err != nil {
 		logger.Error(err, "Failed to list Middlewares")
-		return err
+		return false, err
 	}
 	for _, route := range routes.Items {
 		logger.Info("Found Route", "Name", route.Name)
@@ -108,7 +108,7 @@ func updateGatewayConfig(r RouteReconciler, ctx context.Context, req ctrl.Reques
 	yamlContent, err := yaml.Marshal(&gomaConfig)
 	if err != nil {
 		logger.Error(err, "Unable to marshal YAML")
-		return err
+		return false, err
 	}
 	// Define the desired ConfigMap
 	configMap := &corev1.ConfigMap{
@@ -129,18 +129,18 @@ func updateGatewayConfig(r RouteReconciler, ctx context.Context, req ctrl.Reques
 	err = r.Get(ctx, types.NamespacedName{Name: configMap.Name, Namespace: configMap.Namespace}, &existingConfigMap)
 	if err != nil && client.IgnoreNotFound(err) != nil {
 		logger.Error(err, "Failed to get ConfigMap")
-		return err
+		return false, err
 	}
 
 	if err != nil && client.IgnoreNotFound(err) == nil {
 		// Create the ConfigMap if it doesn't exist
 		if err = controllerutil.SetControllerReference(&gateway, configMap, r.Scheme); err != nil {
 			logger.Error(err, "Failed to set controller reference")
-			return err
+			return false, err
 		}
 		if err = r.Create(ctx, configMap); err != nil {
 			logger.Error(err, "Failed to create ConfigMap")
-			return err
+			return false, err
 		}
 		logger.Info("Created ConfigMap", "ConfigMap.Name", configMap.Name)
 	} else {
@@ -149,13 +149,13 @@ func updateGatewayConfig(r RouteReconciler, ctx context.Context, req ctrl.Reques
 			existingConfigMap.Data = configMap.Data
 			if err = r.Update(ctx, &existingConfigMap); err != nil {
 				logger.Error(err, "Failed to update ConfigMap")
-				return err
+				return false, err
 			}
 			logger.Info("Updated ConfigMap", "ConfigMap.Name", configMap.Name)
 		}
 
 	}
-	return nil
+	return true, nil
 
 }
 
@@ -214,4 +214,9 @@ func mapMid(middleware gomaprojv1beta1.Middleware) *Middleware {
 		return mid
 	}
 	return mid
+}
+
+// Helper function to return a pointer to an int32
+func int32Ptr(i int32) *int32 {
+	return &i
 }
