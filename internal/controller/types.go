@@ -28,10 +28,38 @@ type Gateway struct {
 	DisableKeepAlive bool `yaml:"disableKeepAlive"`
 	EnableMetrics    bool `yaml:"enableMetrics"`
 	// InterceptErrors holds the status codes to intercept the error from backend
-	InterceptErrors []int                         `yaml:"interceptErrors,omitempty"`
-	Routes          []gomaprojv1beta1.RouteConfig `json:"routes,omitempty" yaml:"routes,omitempty"`
+	InterceptErrors []int   `yaml:"interceptErrors,omitempty"`
+	Routes          []Route `json:"routes,omitempty" yaml:"routes,omitempty"`
 }
-
+type Route struct {
+	// Path defines route path
+	Path string `json:"path" yaml:"path"`
+	// Name defines route name
+	Name string `json:"name" yaml:"name"`
+	// Hosts Domains/hosts based request routing
+	Hosts []string `json:"hosts,omitempty" yaml:"hosts"`
+	// Rewrite rewrites route path to desired path
+	Rewrite string `json:"rewrite,omitempty" yaml:"rewrite"`
+	// Methods allowed method
+	Methods []string `json:"methods,omitempty" yaml:"methods"`
+	// Destination Defines backend URL
+	Destination        string   `json:"destination,omitempty" yaml:"destination"`
+	Backends           []string `json:"backends,omitempty" yaml:"backends"`
+	InsecureSkipVerify bool     `json:"insecureSkipVerify,omitempty" yaml:"insecureSkipVerify"`
+	// HealthCheck Defines the backend is health
+	HealthCheck gomaprojv1beta1.RouteHealthCheck `json:"healthCheck,omitempty" yaml:"healthCheck,omitempty"`
+	// Cors contains the route cors headers
+	Cors      gomaprojv1beta1.Cors `json:"cors,omitempty" yaml:"cors"`
+	RateLimit int                  `json:"rateLimit,omitempty" yaml:"rateLimit"`
+	// DisableHostFording Disable host forwarding.
+	DisableHostFording bool `json:"disableHostFording,omitempty" yaml:"disableHostFording"`
+	// InterceptErrors intercepts backend errors based on the status codes
+	InterceptErrors []int `json:"interceptErrors,omitempty" yaml:"interceptErrors"`
+	// BlockCommonExploits enable, disable block common exploits
+	BlockCommonExploits bool `json:"blockCommonExploits,omitempty" yaml:"blockCommonExploits"`
+	// Middlewares Defines route middleware
+	Middlewares []string `json:"middlewares,omitempty" yaml:"middlewares"`
+}
 type Redis struct {
 	// Addr redis hostname and port number :
 	Addr string `yaml:"addr"`

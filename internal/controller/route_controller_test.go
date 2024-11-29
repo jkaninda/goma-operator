@@ -77,15 +77,11 @@ var _ = Describe("Route Controller", func() {
 					},
 					Spec: gomaprojv1beta1.RouteSpec{
 						Gateway: resourceName,
-						Routes: []gomaprojv1beta1.RouteConfig{
-							{
-								Path:        "/",
-								Name:        resourceName,
-								Rewrite:     "/",
-								Destination: "https://example.com",
-								Methods:     []string{"GET", "POST"},
-							},
-						},
+
+						Path:        "/",
+						Rewrite:     "/",
+						Destination: "https://example.com",
+						Methods:     []string{"GET", "POST"},
 					},
 				}
 				Expect(k8sClient.Create(ctx, resource)).To(Succeed())
