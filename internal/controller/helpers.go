@@ -2,6 +2,7 @@ package controller
 
 import (
 	"context"
+	"github.com/jinzhu/copier"
 	"slices"
 	"strings"
 
@@ -20,12 +21,14 @@ func gatewayConfig(r GatewayReconciler, ctx context.Context, req ctrl.Request, g
 	logger := log.FromContext(ctx)
 	gomaConfig := &GatewayConfig{}
 	gomaConfig.Version = GatewayConfigVersion
-	gomaConfig.Gateway = mapToGateway(gateway.Spec)
-
+	err := copier.Copy(&gomaConfig.Gateway, &gateway.Spec.Server)
+	if err != nil {
+		logger.Error(err, "failed to copy gateway spec")
+	}
 	// attach cert files
 	if len(gateway.Spec.Server.TlsSecretName) != 0 {
-		gomaConfig.Gateway.SSLKeyFile = TLSKeyFile
-		gomaConfig.Gateway.SSLCertFile = TLSCertFile
+		gomaConfig.Gateway.TlsCertFile = TLSCertFile
+		gomaConfig.Gateway.TlsKeyFile = TLSKeyFile
 	}
 
 	labelSelector := client.MatchingLabels{}
@@ -44,12 +47,16 @@ func gatewayConfig(r GatewayReconciler, ctx context.Context, req ctrl.Request, g
 	for _, route := range routes.Items {
 		logger.Info("Found Route", "Name", route.Name)
 		if route.Spec.Gateway == gateway.Name {
-			gomaConfig.Gateway.Routes = append(gomaConfig.Gateway.Routes, route.Spec.Routes...)
-			for _, rt := range route.Spec.Routes {
-				middlewareNames = append(middlewareNames, rt.Middlewares...)
-
+			logger.Info("Found Route", "Name", route.Name)
+			rt := Route{}
+			err := copier.Copy(&rt, &route.Spec)
+			if err != nil {
+				logger.Error(err, "Failed to deep copy Route", "Name", route.Name)
+				return *gomaConfig
 			}
-
+			rt.Name = route.Name
+			gomaConfig.Gateway.Routes = append(gomaConfig.Gateway.Routes, rt)
+			middlewareNames = append(middlewareNames, rt.Middlewares...)
 		}
 	}
 	for _, mid := range middlewares.Items {
@@ -66,11 +73,14 @@ func updateGatewayConfig(r RouteReconciler, ctx context.Context, req ctrl.Reques
 	logger := log.FromContext(ctx)
 	gomaConfig := &GatewayConfig{}
 	gomaConfig.Version = GatewayConfigVersion
-	gomaConfig.Gateway = mapToGateway(gateway.Spec)
+	err := copier.Copy(&gomaConfig.Gateway, &gateway.Spec.Server)
+	if err != nil {
+		logger.Error(err, "failed to copy gateway spec")
+	}
 	// attach cert files
 	if len(gateway.Spec.Server.TlsSecretName) != 0 {
-		gomaConfig.Gateway.SSLKeyFile = TLSKeyFile
-		gomaConfig.Gateway.SSLCertFile = TLSCertFile
+		gomaConfig.Gateway.TlsCertFile = TLSCertFile
+		gomaConfig.Gateway.TlsKeyFile = TLSKeyFile
 	}
 	labelSelector := client.MatchingLabels{}
 	var middlewareNames []string
@@ -88,12 +98,15 @@ func updateGatewayConfig(r RouteReconciler, ctx context.Context, req ctrl.Reques
 	for _, route := range routes.Items {
 		logger.Info("Found Route", "Name", route.Name)
 		if route.Spec.Gateway == gateway.Name {
-			gomaConfig.Gateway.Routes = append(gomaConfig.Gateway.Routes, route.Spec.Routes...)
-			for _, rt := range route.Spec.Routes {
-				middlewareNames = append(middlewareNames, rt.Middlewares...)
-
+			rt := Route{}
+			err := copier.Copy(&rt, &route.Spec)
+			if err != nil {
+				logger.Error(err, "Failed to deep copy Route", "Name", route.Name)
+				return false, err
 			}
-
+			rt.Name = route.Name
+			gomaConfig.Gateway.Routes = append(gomaConfig.Gateway.Routes, rt)
+			middlewareNames = append(middlewareNames, rt.Middlewares...)
 		}
 	}
 	for _, mid := range middlewares.Items {

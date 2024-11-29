@@ -39,95 +39,84 @@ spec:
           spec:
             description: RouteSpec defines the desired state of Route.
             properties:
-              gateway:
-                type: string
-              routes:
+              backends:
                 items:
-                  properties:
-                    backends:
-                      items:
-                        type: string
-                      type: array
-                    blockCommonExploits:
-                      description: BlockCommonExploits enable, disable block common
-                        exploits
-                      type: boolean
-                    cors:
-                      description: Cors contains the route cors headers
-                      properties:
-                        headers:
-                          additionalProperties:
-                            type: string
-                          description: Headers contains custom headers
-                          type: object
-                        origins:
-                          description: Cors contains Allowed origins,
-                          items:
-                            type: string
-                          type: array
-                      type: object
-                    destination:
-                      description: Destination Defines backend URL
-                      type: string
-                    disableHostFording:
-                      description: DisableHostFording Disable host forwarding.
-                      type: boolean
-                    healthCheck:
-                      description: HealthCheck Defines the backend is health
-                      properties:
-                        healthyStatuses:
-                          items:
-                            type: integer
-                          type: array
-                        interval:
-                          type: string
-                        path:
-                          type: string
-                        timeout:
-                          type: string
-                      type: object
-                    hosts:
-                      description: Hosts Domains/hosts based request routing
-                      items:
-                        type: string
-                      type: array
-                    insecureSkipVerify:
-                      type: boolean
-                    interceptErrors:
-                      description: InterceptErrors intercepts backend errors based
-                        on the status codes
-                      items:
-                        type: integer
-                      type: array
-                    methods:
-                      description: Methods allowed method
-                      items:
-                        type: string
-                      type: array
-                    middlewares:
-                      description: Middlewares Defines route middleware
-                      items:
-                        type: string
-                      type: array
-                    name:
-                      description: Name defines route name
-                      type: string
-                    path:
-                      description: Path defines route path
-                      type: string
-                    rateLimit:
-                      type: integer
-                    rewrite:
-                      description: Rewrite rewrites route path to desired path
-                      type: string
-                  required:
-                  - name
-                  - path
-                  type: object
+                  type: string
                 type: array
+              blockCommonExploits:
+                description: BlockCommonExploits enable, disable block common exploits
+                type: boolean
+              cors:
+                description: Cors contains the route cors headers
+                properties:
+                  headers:
+                    additionalProperties:
+                      type: string
+                    description: Headers contains custom headers
+                    type: object
+                  origins:
+                    description: Cors contains Allowed origins,
+                    items:
+                      type: string
+                    type: array
+                type: object
+              destination:
+                description: Destination Defines backend URL
+                type: string
+              disableHostFording:
+                description: DisableHostFording Disables host forwarding.
+                type: boolean
+              gateway:
+                description: Gateway defines the name of the Gateway resource
+                type: string
+              healthCheck:
+                description: HealthCheck Defines the backend is health
+                properties:
+                  healthyStatuses:
+                    items:
+                      type: integer
+                    type: array
+                  interval:
+                    type: string
+                  path:
+                    type: string
+                  timeout:
+                    type: string
+                type: object
+              hosts:
+                description: Hosts Domains/hosts based request routing
+                items:
+                  type: string
+                type: array
+              insecureSkipVerify:
+                type: boolean
+              interceptErrors:
+                description: InterceptErrors intercepts backend errors based on the
+                  status codes
+                items:
+                  type: integer
+                type: array
+              methods:
+                description: Methods allowed method
+                items:
+                  type: string
+                type: array
+              middlewares:
+                description: Middlewares Defines route middleware
+                items:
+                  type: string
+                type: array
+              path:
+                description: Path defines route path
+                type: string
+              rateLimit:
+                type: integer
+              rewrite:
+                description: Rewrite rewrites route path to desired path
+                type: string
             required:
             - gateway
-            - routes
+            - path
             type: object
           status:
             description: RouteStatus defines the observed state of Route.

@@ -25,8 +25,33 @@ import (
 
 // RouteSpec defines the desired state of Route.
 type RouteSpec struct {
-	Gateway string        `json:"gateway"`
-	Routes  []RouteConfig `json:"routes"`
+	// Gateway defines the name of the Gateway resource
+	Gateway string `json:"gateway"`
+	// Path defines route path
+	Path string `json:"path" yaml:"path"`
+	// Hosts Domains/hosts based request routing
+	Hosts []string `json:"hosts,omitempty" yaml:"hosts"`
+	// Rewrite rewrites route path to desired path
+	Rewrite string `json:"rewrite,omitempty" yaml:"rewrite"`
+	// Methods allowed method
+	Methods []string `json:"methods,omitempty" yaml:"methods"`
+	// Destination Defines backend URL
+	Destination        string   `json:"destination,omitempty" yaml:"destination"`
+	Backends           []string `json:"backends,omitempty" yaml:"backends"`
+	InsecureSkipVerify bool     `json:"insecureSkipVerify,omitempty" yaml:"insecureSkipVerify"`
+	// HealthCheck Defines the backend is health
+	HealthCheck RouteHealthCheck `json:"healthCheck,omitempty" yaml:"healthCheck,omitempty"`
+	// Cors contains the route cors headers
+	Cors      Cors `json:"cors,omitempty" yaml:"cors"`
+	RateLimit int  `json:"rateLimit,omitempty" yaml:"rateLimit"`
+	// DisableHostFording Disables host forwarding.
+	DisableHostFording bool `json:"disableHostFording,omitempty" yaml:"disableHostFording"`
+	// InterceptErrors intercepts backend errors based on the status codes
+	InterceptErrors []int `json:"interceptErrors,omitempty" yaml:"interceptErrors"`
+	// BlockCommonExploits enable, disable block common exploits
+	BlockCommonExploits bool `json:"blockCommonExploits,omitempty" yaml:"blockCommonExploits"`
+	// Middlewares Defines route middleware
+	Middlewares []string `json:"middlewares,omitempty" yaml:"middlewares"`
 }
 
 // RouteStatus defines the observed state of Route.

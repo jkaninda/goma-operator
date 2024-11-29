@@ -100,8 +100,8 @@ func createUpdateDeployment(r GatewayReconciler, ctx context.Context, req ctrl.R
 								},
 							},
 							ReadinessProbe: &corev1.Probe{
-								InitialDelaySeconds: 20,
-								PeriodSeconds:       20,
+								InitialDelaySeconds: 15,
+								PeriodSeconds:       10,
 								ProbeHandler: corev1.ProbeHandler{
 									HTTPGet: &corev1.HTTPGetAction{
 										Path: "/readyz",
