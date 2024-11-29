@@ -5,9 +5,9 @@ import gomaprojv1beta1 "github.com/jkaninda/goma-operator/api/v1beta1"
 // Gateway contains Goma Proxy Gateway's configs
 type Gateway struct {
 	// TlsCertFile  SSL Certificate file
-	TlsCertFile string `yaml:"TlsCertFile"`
+	TlsCertFile string `yaml:"tlsCertFile"`
 	// TlsKeyFile SSL Private key  file
-	TlsKeyFile string `yaml:"TlsKeyFile"`
+	TlsKeyFile string `yaml:"tlsKeyFile"`
 	// Redis contains redis database details
 	Redis gomaprojv1beta1.Redis `yaml:"redis"`
 	// WriteTimeout defines proxy write timeout
