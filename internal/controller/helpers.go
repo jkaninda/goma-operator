@@ -27,8 +27,8 @@ func gatewayConfig(r GatewayReconciler, ctx context.Context, req ctrl.Request, g
 	}
 	// attach cert files
 	if len(gateway.Spec.Server.TlsSecretName) != 0 {
-		gomaConfig.Gateway.SSLKeyFile = TLSKeyFile
-		gomaConfig.Gateway.SSLCertFile = TLSCertFile
+		gomaConfig.Gateway.TlsCertFile = TLSCertFile
+		gomaConfig.Gateway.TlsKeyFile = TLSKeyFile
 	}
 
 	labelSelector := client.MatchingLabels{}
@@ -79,8 +79,8 @@ func updateGatewayConfig(r RouteReconciler, ctx context.Context, req ctrl.Reques
 	}
 	// attach cert files
 	if len(gateway.Spec.Server.TlsSecretName) != 0 {
-		gomaConfig.Gateway.SSLKeyFile = TLSKeyFile
-		gomaConfig.Gateway.SSLCertFile = TLSCertFile
+		gomaConfig.Gateway.TlsCertFile = TLSCertFile
+		gomaConfig.Gateway.TlsKeyFile = TLSKeyFile
 	}
 	labelSelector := client.MatchingLabels{}
 	var middlewareNames []string
