@@ -12,7 +12,7 @@ A Kubernetes operator for managing Goma Gateway.
 - [Docker Hub](https://hub.docker.com/r/jkaninda/goma-operator)
 - [Github](https://github.com/jkaninda/goma-operator)
 
-### Documentation is found at <https://jkaninda.github.io/goma-gateway/install/kuberntes-advanced.html>
+### Documentation is found at <https://jkaninda.github.io/goma-gateway/operator-manual/installation.html>
 
 
 ### 1. Kubernetes installation
