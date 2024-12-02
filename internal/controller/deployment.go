@@ -41,7 +41,7 @@ func createUpdateDeployment(r GatewayReconciler, ctx context.Context, req ctrl.R
 	})
 	if len(gateway.Spec.Server.TlsSecretName) != 0 {
 		volumes = append(volumes, corev1.Volume{
-			Name: req.Name,
+			Name: "certs",
 			VolumeSource: corev1.VolumeSource{
 				Secret: &corev1.SecretVolumeSource{
 					SecretName: gateway.Spec.Server.TlsSecretName,
@@ -49,7 +49,7 @@ func createUpdateDeployment(r GatewayReconciler, ctx context.Context, req ctrl.R
 			},
 		})
 		volumeMounts = append(volumeMounts, corev1.VolumeMount{
-			Name:      req.Name,
+			Name:      "certs",
 			ReadOnly:  true,
 			MountPath: CertsPath,
 		})
