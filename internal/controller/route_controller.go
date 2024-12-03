@@ -18,6 +18,7 @@ package controller
 
 import (
 	"context"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
 	gomaprojv1beta1 "github.com/jkaninda/goma-operator/api/v1beta1"
 	"k8s.io/apimachinery/pkg/types"
@@ -55,8 +56,8 @@ type RouteReconciler struct {
 func (r *RouteReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	logger := log.FromContext(ctx)
 	// Fetch the custom resource
-	var route gomaprojv1beta1.Route
-	if err := r.Get(ctx, req.NamespacedName, &route); err != nil {
+	route := &gomaprojv1beta1.Route{}
+	if err := r.Get(ctx, req.NamespacedName, route); err != nil {
 		logger.Error(err, "Unable to fetch CustomResource")
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
@@ -65,6 +66,38 @@ func (r *RouteReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		logger.Error(err, "Failed to fetch Gateway")
 		return ctrl.Result{}, err
 	}
+
+	// Check if the object is being deleted and if so, handle it
+	if route.ObjectMeta.DeletionTimestamp.IsZero() {
+		if !controllerutil.ContainsFinalizer(route, FinalizerName) {
+			controllerutil.AddFinalizer(route, FinalizerName)
+			err := r.Update(ctx, route)
+			if err != nil {
+				return ctrl.Result{}, err
+			}
+		}
+	} else {
+		if controllerutil.ContainsFinalizer(route, FinalizerName) {
+			// Once finalization is done, remove the finalizer
+			ok, err := updateGatewayConfig(*r, ctx, req, gateway)
+			if err != nil {
+				return ctrl.Result{}, err
+			}
+			if ok {
+				if err = restartDeployment(r.Client, ctx, req, &gateway); err != nil {
+					return ctrl.Result{}, err
+				}
+			}
+			//  Remove the finalizer
+			controllerutil.RemoveFinalizer(route, FinalizerName)
+			err = r.Update(ctx, route)
+			if err != nil {
+				return ctrl.Result{}, err
+			}
+		}
+		return ctrl.Result{}, nil
+	}
+
 	ok, err := updateGatewayConfig(*r, ctx, req, gateway)
 	if err != nil {
 		return ctrl.Result{}, err
