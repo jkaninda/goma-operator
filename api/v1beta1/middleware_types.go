@@ -29,8 +29,8 @@ type MiddlewareSpec struct {
 	// Type contains authentication types
 	//
 	// basic, jwt, auth0, rateLimit, access
-	Type  string   `json:"type" yaml:"type"`   // Middleware type [basic, jwt, auth0, rateLimit, access]
-	Paths []string `json:"paths" yaml:"paths"` // Protected paths
+	Type  string   `json:"type" yaml:"type"`             // Middleware type [basic, jwt, auth0, rateLimit, access]
+	Paths []string `json:"paths,omitempty" yaml:"paths"` // Protected paths
 	// Rule contains rule type of
 	Rule runtime.RawExtension `json:"rule,omitempty" yaml:"rule"` // Middleware rule
 }

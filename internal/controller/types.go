@@ -97,6 +97,13 @@ type JWTRuleMiddleware struct {
 	Headers         map[string]string `yaml:"headers" json:"headers"`
 	Params          map[string]string `yaml:"params" json:"params"`
 }
+
+// AccessPolicyRuleMiddleware access policy
+type AccessPolicyRuleMiddleware struct {
+	Action       string   `yaml:"action,omitempty" json:"action,omitempty"` // action, ALLOW or DENY
+	SourceRanges []string `yaml:"sourceRanges" json:"sourceRanges"`         //  list of Ips
+}
+
 type RateLimitRuleMiddleware struct {
 	Unit            string `yaml:"unit" json:"unit"`
 	RequestsPerUnit int    `yaml:"requestsPerUnit" json:"requestsPerUnit"`

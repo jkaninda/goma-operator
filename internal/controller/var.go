@@ -15,6 +15,7 @@ const (
 	ConfigName           = "goma.yml"
 	TLSCertFile          = "/etc/goma/certs/tls.crt"
 	TLSKeyFile           = "/etc/goma/certs/tls.key"
+	accessPolicy         = "accessPolicy"
 )
 
 var (

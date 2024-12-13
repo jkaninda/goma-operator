@@ -218,7 +218,6 @@ func restartDeployment(r client.Client, ctx context.Context, req ctrl.Request, g
 	}
 
 	deployment.Spec.Template.ObjectMeta.Annotations["restarted-at"] = time.Now().Format(time.RFC3339)
-	deployment.Spec.Template.ObjectMeta.Annotations["updated-at"] = time.Now().Format(time.RFC3339)
 	// Update the Deployment
 	if err := r.Update(ctx, &deployment); err != nil {
 		logger.Error(err, "Failed to update Deployment for restart", "name", gateway.Name, "namespace", req.Name)
