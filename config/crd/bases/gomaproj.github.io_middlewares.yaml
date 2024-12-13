@@ -54,7 +54,6 @@ spec:
                   basic, jwt, auth0, rateLimit, access
                 type: string
             required:
-            - paths
             - type
             type: object
           status:

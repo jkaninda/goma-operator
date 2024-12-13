@@ -7,29 +7,28 @@ metadata:
   name: route-sample
 spec:
   gateway: gateway-sample
-  routes:
-    - path: /
-      name: Example
-      hosts: []
-      rewrite: /
-      methods:
-        - GET
-      destination: https://example.com
-      backends: []
-      insecureSkipVerify: false
-      healthCheck:
-        path: /
-        interval: 10s
-        timeout: 10s
-        healthyStatuses:
-          - 200
-          - 404
-      cors:
-        origins: []
-        headers: {}
-      rateLimit: 15
-      disableHostFording: true
-      interceptErrors: []
-      blockCommonExploits: false
-      middlewares:
-        - middleware-sample
+  path: /
+  name: Example
+  hosts: []
+  rewrite: /
+  methods:
+    - GET
+  destination: https://example.com
+  backends: []
+  insecureSkipVerify: false
+  healthCheck:
+    path: /
+    interval: 10s
+    timeout: 10s
+    healthyStatuses:
+      - 200
+      - 404
+  cors:
+    origins: []
+    headers: {}
+  rateLimit: 15
+  disableHostFording: true
+  interceptErrors: []
+  blockCommonExploits: false
+  middlewares:
+    - middleware-sample

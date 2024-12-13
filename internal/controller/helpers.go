@@ -188,47 +188,36 @@ func equalConfigMapData(existing, desired map[string]string) bool {
 	return true
 }
 
-// mapMid converts RawExtensionT to struct
+// mapMid converts RawExtension to struct
 func mapMid(middleware gomaprojv1beta1.Middleware) *Middleware {
 	mid := &Middleware{
 		Name:  middleware.Name,
 		Type:  middleware.Spec.Type,
 		Paths: middleware.Spec.Paths,
 	}
-	switch middleware.Spec.Type {
-	case BasicAuth:
-		var basicAuth BasicRuleMiddleware
-		err := ConvertRawExtensionToStruct(middleware.Spec.Rule, &basicAuth)
-		if err != nil {
-			return mid
-		}
-		mid.Rule = basicAuth
-		return mid
-	case OAuth:
-		var oauthRulerMiddleware OauthRulerMiddleware
-		err := ConvertRawExtensionToStruct(middleware.Spec.Rule, &oauthRulerMiddleware)
-		if err != nil {
-			return mid
-		}
-		mid.Rule = oauthRulerMiddleware
-		return mid
-	case JWTAuth:
-		var jwtAuth JWTRuleMiddleware
-		err := ConvertRawExtensionToStruct(middleware.Spec.Rule, &jwtAuth)
-		if err != nil {
-			return mid
-		}
-		mid.Rule = jwtAuth
-		return mid
-	case ratelimit, RateLimit:
-		var rateLimitRuleMiddleware RateLimitRuleMiddleware
-		err := ConvertRawExtensionToStruct(middleware.Spec.Rule, &rateLimitRuleMiddleware)
-		if err != nil {
-			return mid
-		}
-		mid.Rule = rateLimitRuleMiddleware
+
+	// Mapping of middleware types to their respective struct types
+	ruleMapping := map[string]interface{}{
+		BasicAuth:    &BasicRuleMiddleware{},
+		OAuth:        &OauthRulerMiddleware{},
+		JWTAuth:      &JWTRuleMiddleware{},
+		ratelimit:    &RateLimitRuleMiddleware{},
+		RateLimit:    &RateLimitRuleMiddleware{},
+		accessPolicy: &AccessPolicyRuleMiddleware{},
+	}
+
+	rule, exists := ruleMapping[middleware.Spec.Type]
+	if !exists {
 		return mid
 	}
+
+	// Attempt to convert the rule to the appropriate struct
+	err := ConvertRawExtensionToStruct(middleware.Spec.Rule, rule)
+	if err != nil {
+		return mid
+	}
+
+	mid.Rule = rule
 	return mid
 }
 

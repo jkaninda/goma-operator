@@ -1234,7 +1234,6 @@ spec:
                   basic, jwt, auth0, rateLimit, access
                 type: string
             required:
-            - paths
             - type
             type: object
           status:
@@ -1777,7 +1776,7 @@ spec:
         - --health-probe-bind-address=:8081
         command:
         - /manager
-        image: jkaninda/goma-operator:0.1.0-rc.5
+        image: jkaninda/goma-operator:0.1.0-rc6
         livenessProbe:
           httpGet:
             path: /healthz
