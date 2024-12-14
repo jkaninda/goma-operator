@@ -1043,7 +1043,8 @@ spec:
               server:
                 properties:
                   cors:
-                    description: Cors holds proxy global cors
+                    description: Cors holds the global CORS (Cross-Origin Resource
+                      Sharing) configuration for the proxy.
                     properties:
                       headers:
                         additionalProperties:
@@ -1057,33 +1058,60 @@ spec:
                         type: array
                     type: object
                   disableHealthCheckStatus:
-                    description: DisableHealthCheckStatus enable and disable routes
-                      health check
+                    description: DisableHealthCheckStatus enables or disables health
+                      checks for routes.
                     type: boolean
                   disableKeepAlive:
-                    description: DisableKeepAlive allows enabling and disabling KeepALive
-                      server
+                    description: DisableKeepAlive enables or disables the server's
+                      KeepAlive connections.
                     type: boolean
                   enableMetrics:
-                    description: EnableMetrics enable and disable server metrics
+                    description: EnableMetrics toggles the collection and exposure
+                      of server metrics.
                     type: boolean
+                  errorInterceptor:
+                    description: ErrorInterceptor defines the configuration for intercepting
+                      and handling backend errors.
+                    properties:
+                      contentType:
+                        type: string
+                      enabled:
+                        type: boolean
+                      errors:
+                        items:
+                          properties:
+                            body:
+                              type: string
+                            code:
+                              type: integer
+                          required:
+                          - code
+                          type: object
+                        type: array
+                    required:
+                    - enabled
+                    type: object
                   idleTimeout:
-                    description: IdleTimeout defines proxy idle timeout
+                    description: IdleTimeout defines the proxy's idle timeout in seconds.
                     type: integer
                   interceptErrors:
-                    description: InterceptErrors holds the status codes to intercept
-                      the error from backend
+                    description: |-
+                      InterceptErrors lists HTTP status codes for intercepting backend errors.
+                      Deprecated: Use ErrorInterceptor for enhanced error handling.
                     items:
                       type: integer
                     type: array
                   logLevel:
-                    description: LogLevel log level, info, debug, trace, off
+                    description: 'LogLevel specifies the logging level for the proxy.
+                      Accepted values: "info", "debug", "trace", "off".'
                     type: string
                   readTimeout:
-                    description: ReadTimeout defines proxy read timeout
+                    description: ReadTimeout specifies the proxy's read timeout in
+                      seconds.
                     type: integer
                   redis:
-                    description: Redis contains redis database details
+                    description: Redis contains the configuration details for connecting
+                      to a Redis database.
                     properties:
                       addr:
                         description: 'Addr redis hostname and port number :'
@@ -1092,10 +1120,12 @@ spec:
                         type: string
                     type: object
                   tlsSecretName:
-                    description: tls secret name
+                    description: TlsSecretName specifies the name of the secret containing
+                      the TLS certificate and key.
                     type: string
                   writeTimeout:
-                    description: WriteTimeout defines proxy write timeout
+                    description: WriteTimeout specifies the proxy's write timeout
+                      in seconds.
                     type: integer
                 type: object
             type: object
