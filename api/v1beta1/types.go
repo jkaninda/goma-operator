@@ -28,27 +28,30 @@ type Middlewares struct {
 }
 
 type Server struct {
-	// WriteTimeout defines proxy write timeout
+	// WriteTimeout specifies the proxy's write timeout in seconds.
 	WriteTimeout int `json:"writeTimeout,omitempty" yaml:"writeTimeout,omitempty"`
-	// ReadTimeout defines proxy read timeout
+	// ReadTimeout specifies the proxy's read timeout in seconds.
 	ReadTimeout int `json:"readTimeout,omitempty" yaml:"readTimeout,omitempty"`
-	// IdleTimeout defines proxy idle timeout
+	// IdleTimeout defines the proxy's idle timeout in seconds.
 	IdleTimeout int `json:"idleTimeout,omitempty" yaml:"idleTimeout,omitempty"`
-	// LogLevel log level, info, debug, trace, off
+	// LogLevel specifies the logging level for the proxy. Accepted values: "info", "debug", "trace", "off".
 	LogLevel string `json:"logLevel,omitempty" yaml:"logLevel,omitempty"`
-	// tls secret name
+	// TlsSecretName specifies the name of the secret containing the TLS certificate and key.
 	TlsSecretName string `json:"tlsSecretName,omitempty" yaml:"tlsSecretName,omitempty"`
-	// Redis contains redis database details
+	// Redis contains the configuration details for connecting to a Redis database.
 	Redis Redis `json:"redis,omitempty" yaml:"redis,omitempty"`
-	// Cors holds proxy global cors
-	Cors Cors `json:"cors,omitempty" yaml:"cors,omitempty,omitempty"`
-	// InterceptErrors holds the status codes to intercept the error from backend
+	// Cors holds the global CORS (Cross-Origin Resource Sharing) configuration for the proxy.
+	Cors Cors `json:"cors,omitempty" yaml:"cors,omitempty"`
+	// InterceptErrors lists HTTP status codes for intercepting backend errors.
+	// Deprecated: Use ErrorInterceptor for enhanced error handling.
 	InterceptErrors []int `json:"interceptErrors,omitempty" yaml:"interceptErrors,omitempty"`
-	// DisableHealthCheckStatus enable and disable routes health check
+	// ErrorInterceptor defines the configuration for intercepting and handling backend errors.
+	ErrorInterceptor RouteErrorInterceptor `json:"errorInterceptor,omitempty" yaml:"errorInterceptor,omitempty"`
+	// DisableHealthCheckStatus enables or disables health checks for routes.
 	DisableHealthCheckStatus bool `json:"disableHealthCheckStatus,omitempty" yaml:"disableHealthCheckStatus"`
-	// DisableKeepAlive allows enabling and disabling KeepALive server
+	// DisableKeepAlive enables or disables the server's KeepAlive connections.
 	DisableKeepAlive bool `json:"disableKeepAlive,omitempty" yaml:"disableKeepAlive"`
-	// EnableMetrics enable and disable server metrics
+	// EnableMetrics toggles the collection and exposure of server metrics.
 	EnableMetrics bool `json:"enableMetrics,omitempty" yaml:"enableMetrics"`
 }
 
@@ -62,4 +65,13 @@ type Redis struct {
 	// Addr redis hostname and port number :
 	Addr     string `json:"addr,omitempty" yaml:"addr,omitempty"`
 	Password string `json:"password,omitempty" yaml:"password,omitempty"`
+}
+type RouteErrorInterceptor struct {
+	Enabled     bool         `yaml:"enabled" json:"enabled"`
+	ContentType string       `yaml:"contentType,omitempty,omitempty" json:"contentType,omitempty"`
+	Errors      []RouteError `yaml:"errors,omitempty" json:"errors,omitempty"`
+}
+type RouteError struct {
+	Code int    `yaml:"code" json:"code"`
+	Body string `yaml:"body,omitempty,omitempty" json:"body,omitempty"`
 }

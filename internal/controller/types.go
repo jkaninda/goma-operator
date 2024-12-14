@@ -28,8 +28,11 @@ type Gateway struct {
 	DisableKeepAlive bool `yaml:"disableKeepAlive"`
 	EnableMetrics    bool `yaml:"enableMetrics"`
 	// InterceptErrors holds the status codes to intercept the error from backend
-	InterceptErrors []int   `yaml:"interceptErrors,omitempty"`
-	Routes          []Route `json:"routes,omitempty" yaml:"routes,omitempty"`
+	InterceptErrors       []int `yaml:"interceptErrors,omitempty"` // Deprecated
+	DisableHostForwarding bool  `yaml:"disableHostForwarding"`
+	//  ErrorInterceptor handles backend error interceptor
+	ErrorInterceptor gomaprojv1beta1.RouteErrorInterceptor `yaml:"errorInterceptor,omitempty" json:"errorInterceptor,omitempty"`
+	Routes           []Route                               `json:"routes,omitempty" yaml:"routes,omitempty"`
 }
 type Route struct {
 	// Path defines route path
@@ -54,7 +57,11 @@ type Route struct {
 	// DisableHostFording Disable host forwarding.
 	DisableHostFording bool `json:"disableHostFording,omitempty" yaml:"disableHostFording"`
 	// InterceptErrors intercepts backend errors based on the status codes
-	InterceptErrors []int `json:"interceptErrors,omitempty" yaml:"interceptErrors"`
+	InterceptErrors       []int `json:"interceptErrors,omitempty" yaml:"interceptErrors"` // Deprecated
+	DisableHostForwarding bool  `json:"disableHostForwarding,omitempty" yaml:"disableHostForwarding"`
+	//  ErrorInterceptor handles backend error interceptor
+	ErrorInterceptor gomaprojv1beta1.RouteErrorInterceptor `yaml:"errorInterceptor,omitempty" json:"errorInterceptor,omitempty"`
+
 	// BlockCommonExploits enable, disable block common exploits
 	BlockCommonExploits bool `json:"blockCommonExploits,omitempty" yaml:"blockCommonExploits"`
 	// Middlewares Defines route middleware

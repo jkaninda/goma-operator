@@ -1051,7 +1051,8 @@ spec:
               server:
                 properties:
                   cors:
-                    description: Cors holds proxy global cors
+                    description: Cors holds the global CORS (Cross-Origin Resource
+                      Sharing) configuration for the proxy.
                     properties:
                       headers:
                         additionalProperties:
@@ -1065,33 +1066,60 @@ spec:
                         type: array
                     type: object
                   disableHealthCheckStatus:
-                    description: DisableHealthCheckStatus enable and disable routes
-                      health check
+                    description: DisableHealthCheckStatus enables or disables health
+                      checks for routes.
                     type: boolean
                   disableKeepAlive:
-                    description: DisableKeepAlive allows enabling and disabling KeepALive
-                      server
+                    description: DisableKeepAlive enables or disables the server's
+                      KeepAlive connections.
                     type: boolean
                   enableMetrics:
-                    description: EnableMetrics enable and disable server metrics
+                    description: EnableMetrics toggles the collection and exposure
+                      of server metrics.
                     type: boolean
+                  errorInterceptor:
+                    description: ErrorInterceptor defines the configuration for intercepting
+                      and handling backend errors.
+                    properties:
+                      contentType:
+                        type: string
+                      enabled:
+                        type: boolean
+                      errors:
+                        items:
+                          properties:
+                            body:
+                              type: string
+                            code:
+                              type: integer
+                          required:
+                          - code
+                          type: object
+                        type: array
+                    required:
+                    - enabled
+                    type: object
                   idleTimeout:
-                    description: IdleTimeout defines proxy idle timeout
+                    description: IdleTimeout defines the proxy's idle timeout in seconds.
                     type: integer
                   interceptErrors:
-                    description: InterceptErrors holds the status codes to intercept
-                      the error from backend
+                    description: |-
+                      InterceptErrors lists HTTP status codes for intercepting backend errors.
+                      Deprecated: Use ErrorInterceptor for enhanced error handling.
                     items:
                       type: integer
                     type: array
                   logLevel:
-                    description: LogLevel log level, info, debug, trace, off
+                    description: 'LogLevel specifies the logging level for the proxy.
+                      Accepted values: "info", "debug", "trace", "off".'
                     type: string
                   readTimeout:
-                    description: ReadTimeout defines proxy read timeout
+                    description: ReadTimeout specifies the proxy's read timeout in
+                      seconds.
                     type: integer
                   redis:
-                    description: Redis contains redis database details
+                    description: Redis contains the configuration details for connecting
+                      to a Redis database.
                     properties:
                       addr:
                         description: 'Addr redis hostname and port number :'
@@ -1100,10 +1128,12 @@ spec:
                         type: string
                     type: object
                   tlsSecretName:
-                    description: tls secret name
+                    description: TlsSecretName specifies the name of the secret containing
+                      the TLS certificate and key.
                     type: string
                   writeTimeout:
-                    description: WriteTimeout defines proxy write timeout
+                    description: WriteTimeout specifies the proxy's write timeout
+                      in seconds.
                     type: integer
                 type: object
             type: object
@@ -1283,17 +1313,20 @@ spec:
           metadata:
             type: object
           spec:
-            description: RouteSpec defines the desired state of Route.
+            description: RouteSpec defines the desired state of a route.
             properties:
               backends:
+                description: Backends specifies a list of backend URLs for load balancing.
                 items:
                   type: string
                 type: array
               blockCommonExploits:
-                description: BlockCommonExploits enable, disable block common exploits
+                description: BlockCommonExploits enables or disables blocking common
+                  exploits, such as basic SQL injection or XSS attempts.
                 type: boolean
               cors:
-                description: Cors contains the route cors headers
+                description: Cors specifies the CORS (Cross-Origin Resource Sharing)
+                  configuration for the route.
                 properties:
                   headers:
                     additionalProperties:
@@ -1307,16 +1340,46 @@ spec:
                     type: array
                 type: object
               destination:
-                description: Destination Defines backend URL
+                description: Destination defines the backend URL to which requests
+                  will be proxied.
                 type: string
               disableHostFording:
-                description: DisableHostFording Disables host forwarding.
+                description: |-
+                  DisableHostFording disables host forwarding for this route.
+                  Deprecated: Use DisableHostForwarding instead.
                 type: boolean
+              disableHostForwarding:
+                description: DisableHostForwarding disables forwarding the host header
+                  to the backend.
+                type: boolean
+              errorInterceptor:
+                description: ErrorInterceptor defines the configuration for handling
+                  backend error interception.
+                properties:
+                  contentType:
+                    type: string
+                  enabled:
+                    type: boolean
+                  errors:
+                    items:
+                      properties:
+                        body:
+                          type: string
+                        code:
+                          type: integer
+                      required:
+                      - code
+                      type: object
+                    type: array
+                required:
+                - enabled
+                type: object
               gateway:
-                description: Gateway defines the name of the Gateway resource
+                description: Gateway specifies the name of the Gateway resource associated
+                  with this route.
                 type: string
               healthCheck:
-                description: HealthCheck Defines the backend is health
+                description: HealthCheck defines the settings for backend health checks.
                 properties:
                   healthyStatuses:
                     items:
@@ -1330,35 +1393,44 @@ spec:
                     type: string
                 type: object
               hosts:
-                description: Hosts Domains/hosts based request routing
+                description: Hosts defines a list of domains or hosts for host-based
+                  request routing.
                 items:
                   type: string
                 type: array
               insecureSkipVerify:
+                description: InsecureSkipVerify allows skipping TLS certificate verification
+                  for backend connections.
                 type: boolean
               interceptErrors:
-                description: InterceptErrors intercepts backend errors based on the
-                  status codes
+                description: |-
+                  InterceptErrors specifies a list of HTTP status codes for which backend errors should be intercepted.
+                  Deprecated: Use ErrorInterceptor for advanced error handling.
                 items:
                   type: integer
                 type: array
               methods:
-                description: Methods allowed method
+                description: Methods specifies the HTTP methods allowed for this route
+                  (e.g., GET, POST, PUT).
                 items:
                   type: string
                 type: array
               middlewares:
-                description: Middlewares Defines route middleware
+                description: Middlewares specifies a list of middleware names to apply
+                  to this route.
                 items:
                   type: string
                 type: array
               path:
-                description: Path defines route path
+                description: Path specifies the route path.
                 type: string
               rateLimit:
+                description: RateLimit defines the maximum number of requests allowed
+                  per minute for this route.
                 type: integer
               rewrite:
-                description: Rewrite rewrites route path to desired path
+                description: Rewrite specifies the new path to rewrite the incoming
+                  route path to.
                 type: string
             required:
             - gateway
@@ -1776,7 +1848,7 @@ spec:
         - --health-probe-bind-address=:8081
         command:
         - /manager
-        image: jkaninda/goma-operator:0.1.0-rc6
+        image: jkaninda/goma-operator:0.1.0-rc7
         livenessProbe:
           httpGet:
             path: /healthz
