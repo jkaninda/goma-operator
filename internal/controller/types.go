@@ -55,15 +55,15 @@ type Route struct {
 	Cors      gomaprojv1beta1.Cors `json:"cors,omitempty" yaml:"cors"`
 	RateLimit int                  `json:"rateLimit,omitempty" yaml:"rateLimit"`
 	// DisableHostFording Disable host forwarding.
-	DisableHostFording bool `json:"disableHostFording,omitempty" yaml:"disableHostFording"`
+	DisableHostFording bool `json:"disableHostFording,omitempty" yaml:"disableHostFording,omitempty"`
 	// InterceptErrors intercepts backend errors based on the status codes
 	InterceptErrors       []int `json:"interceptErrors,omitempty" yaml:"interceptErrors"` // Deprecated
-	DisableHostForwarding bool  `json:"disableHostForwarding,omitempty" yaml:"disableHostForwarding"`
+	DisableHostForwarding bool  `json:"disableHostForwarding,omitempty" yaml:"disableHostForwarding,omitempty"`
 	//  ErrorInterceptor handles backend error interceptor
 	ErrorInterceptor gomaprojv1beta1.RouteErrorInterceptor `yaml:"errorInterceptor,omitempty" json:"errorInterceptor,omitempty"`
 
 	// BlockCommonExploits enable, disable block common exploits
-	BlockCommonExploits bool `json:"blockCommonExploits,omitempty" yaml:"blockCommonExploits"`
+	BlockCommonExploits bool `json:"blockCommonExploits,omitempty" yaml:"blockCommonExploits,omitempty"`
 	// Middlewares Defines route middleware
 	Middlewares []string `json:"middlewares,omitempty" yaml:"middlewares"`
 }
