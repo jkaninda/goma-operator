@@ -37,10 +37,13 @@ spec:
           metadata:
             type: object
           spec:
-            description: GatewaySpec defines the desired state of Gateway.
+            description: GatewaySpec defines the desired configuration and state of
+              the Gateway deployment.
             properties:
               affinity:
-                description: Affinity is a group of affinity scheduling rules.
+                description: |-
+                  Affinity defines node affinity rules for pod scheduling.
+                  It allows you to specify rules for how pods should be placed on specific nodes, based on labels, zones, or other factors.
                 properties:
                   nodeAffinity:
                     description: Describes node affinity scheduling rules for the
@@ -960,6 +963,9 @@ spec:
                     type: object
                 type: object
               autoScaling:
+                description: |-
+                  AutoScaling defines the settings for enabling or disabling pod autoscaling.
+                  When enabled, it allows Kubernetes to automatically adjust the number of Gateway pods based on usage metrics (e.g., CPU or memory).
                 properties:
                   enabled:
                     type: boolean
@@ -977,12 +983,23 @@ spec:
                     type: integer
                 type: object
               gatewayVersion:
+                description: |-
+                  GatewayVersion specifies the version of the Goma Gateway image to use.
+                  This value is used to pull the desired image for the Goma Gateway service.
+                  Example: "v0.1.4"
                 type: string
               replicaCount:
+                description: |-
+                  ReplicaCount defines the number of replicas for the Gateway deployment.
+                  This field determines how many instances of the Gateway service will run in the cluster.
+                  A higher count provides better availability and fault tolerance.
                 format: int32
                 type: integer
               resources:
-                description: ResourceRequirements describes the compute resource requirements.
+                description: |-
+                  Resources defines the resource requests and limits for the Gateway deployment.
+                  It specifies the amount of CPU and memory the Gateway pods should reserve, as well as any limits.
+                  This helps ensure proper resource allocation and avoids resource contention.
                 properties:
                   claims:
                     description: |-
@@ -1041,6 +1058,9 @@ spec:
                     type: object
                 type: object
               server:
+                description: |-
+                  Server contains the configuration for the Gateway server.
+                  It includes settings related to the server such as port, protocol, and other gateway-related configurations.
                 properties:
                   cors:
                     description: Cors holds the global CORS (Cross-Origin Resource
@@ -1094,13 +1114,6 @@ spec:
                   idleTimeout:
                     description: IdleTimeout defines the proxy's idle timeout in seconds.
                     type: integer
-                  interceptErrors:
-                    description: |-
-                      InterceptErrors lists HTTP status codes for intercepting backend errors.
-                      Deprecated: Use ErrorInterceptor for enhanced error handling.
-                    items:
-                      type: integer
-                    type: array
                   logLevel:
                     description: 'LogLevel specifies the logging level for the proxy.
                       Accepted values: "info", "debug", "trace", "off".'

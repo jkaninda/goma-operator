@@ -24,15 +24,27 @@ import (
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 
-// MiddlewareSpec defines the desired state of Middleware.
+// MiddlewareSpec defines the desired configuration for middleware in the system.
 type MiddlewareSpec struct {
-	// Type contains authentication types
-	//
-	// basic, jwt, auth0, rateLimit, access
-	Type  string   `json:"type" yaml:"type"`             // Middleware type [basic, jwt, auth0, rateLimit, access]
-	Paths []string `json:"paths,omitempty" yaml:"paths"` // Protected paths
-	// Rule contains rule type of
-	Rule runtime.RawExtension `json:"rule,omitempty" yaml:"rule"` // Middleware rule
+	// Type specifies the type of middleware to be applied.
+	// Available values:
+	// - "basic": Basic authentication.
+	// - "jwt": JSON Web Token (JWT) authentication.
+	// - "auth": Authentication using Auth0 service.
+	// - "rateLimit": Middleware for rate-limiting requests.
+	// - "access": General access control middleware.
+	// - "accessPolicy": Middleware for IP-based access policies.
+	Type string `json:"type" yaml:"type"` // Type of middleware to apply [basic, jwt, auth0, rateLimit, access, accessPolicy]
+
+	// Paths defines the list of paths to which the middleware will be applied.
+	// These paths will be protected by the middleware specified in the 'Type' field.
+	Paths []string `json:"paths,omitempty" yaml:"paths,omitempty"` // List of paths to protect with the middleware
+
+	// Rule contains the specific rule or configuration for the middleware.
+	// This field allows for flexible rule configurations, such as access control or rate limiting.
+	// It is represented as a RawExtension to accommodate different formats.
+	// The content of this field depends on the middleware type and is optional.
+	Rule runtime.RawExtension `json:"rule,omitempty" yaml:"rule,omitempty"` // Specific middleware rule or configuration
 }
 
 // MiddlewareStatus defines the observed state of Middleware.

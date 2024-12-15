@@ -21,14 +21,34 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// GatewaySpec defines the desired state of Gateway.
+// GatewaySpec defines the desired configuration and state of the Gateway deployment.
 type GatewaySpec struct {
-	GatewayVersion string                  `json:"gatewayVersion,omitempty"`
-	Server         Server                  `json:"server,omitempty"`
-	ReplicaCount   int32                   `json:"replicaCount,omitempty"`
-	AutoScaling    AutoScaling             `json:"autoScaling,omitempty"`
-	Resources      v1.ResourceRequirements `json:"resources,omitempty"`
-	Affinity       *v1.Affinity            `json:"affinity,omitempty"`
+	// GatewayVersion specifies the version of the Goma Gateway image to use.
+	// This value is used to pull the desired image for the Goma Gateway service.
+	// Example: "v0.1.4"
+	GatewayVersion string `json:"gatewayVersion,omitempty"` // The version tag of the Goma Gateway image
+
+	// Server contains the configuration for the Gateway server.
+	// It includes settings related to the server such as port, protocol, and other gateway-related configurations.
+	Server Server `json:"server,omitempty"` // Gateway server configuration
+
+	// ReplicaCount defines the number of replicas for the Gateway deployment.
+	// This field determines how many instances of the Gateway service will run in the cluster.
+	// A higher count provides better availability and fault tolerance.
+	ReplicaCount int32 `json:"replicaCount,omitempty"` // Number of replicas for the Gateway deployment
+
+	// AutoScaling defines the settings for enabling or disabling pod autoscaling.
+	// When enabled, it allows Kubernetes to automatically adjust the number of Gateway pods based on usage metrics (e.g., CPU or memory).
+	AutoScaling AutoScaling `json:"autoScaling,omitempty"` // Auto-scaling configuration for Gateway pods
+
+	// Resources defines the resource requests and limits for the Gateway deployment.
+	// It specifies the amount of CPU and memory the Gateway pods should reserve, as well as any limits.
+	// This helps ensure proper resource allocation and avoids resource contention.
+	Resources v1.ResourceRequirements `json:"resources,omitempty"` // Resource requirements for Gateway pods
+
+	// Affinity defines node affinity rules for pod scheduling.
+	// It allows you to specify rules for how pods should be placed on specific nodes, based on labels, zones, or other factors.
+	Affinity *v1.Affinity `json:"affinity,omitempty"` // Affinity rules for pod scheduling
 }
 
 // GatewayStatus defines the observed state of Gateway.

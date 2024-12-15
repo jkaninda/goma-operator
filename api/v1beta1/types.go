@@ -42,9 +42,6 @@ type Server struct {
 	Redis Redis `json:"redis,omitempty" yaml:"redis,omitempty"`
 	// Cors holds the global CORS (Cross-Origin Resource Sharing) configuration for the proxy.
 	Cors Cors `json:"cors,omitempty" yaml:"cors,omitempty"`
-	// InterceptErrors lists HTTP status codes for intercepting backend errors.
-	// Deprecated: Use ErrorInterceptor for enhanced error handling.
-	InterceptErrors []int `json:"interceptErrors,omitempty" yaml:"interceptErrors,omitempty"`
 	// ErrorInterceptor defines the configuration for intercepting and handling backend errors.
 	ErrorInterceptor RouteErrorInterceptor `json:"errorInterceptor,omitempty" yaml:"errorInterceptor,omitempty"`
 	// DisableHealthCheckStatus enables or disables health checks for routes.

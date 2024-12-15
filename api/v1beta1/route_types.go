@@ -50,9 +50,6 @@ type RouteSpec struct {
 	// DisableHostFording disables host forwarding for this route.
 	// Deprecated: Use DisableHostForwarding instead.
 	DisableHostFording bool `json:"disableHostFording,omitempty" yaml:"disableHostFording"`
-	// InterceptErrors specifies a list of HTTP status codes for which backend errors should be intercepted.
-	// Deprecated: Use ErrorInterceptor for advanced error handling.
-	InterceptErrors []int `json:"interceptErrors,omitempty" yaml:"interceptErrors"`
 	// DisableHostForwarding disables forwarding the host header to the backend.
 	DisableHostForwarding bool `json:"disableHostForwarding,omitempty" yaml:"disableHostForwarding"`
 	// ErrorInterceptor defines the configuration for handling backend error interception.
