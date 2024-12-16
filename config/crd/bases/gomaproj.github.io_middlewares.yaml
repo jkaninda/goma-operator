@@ -37,21 +37,34 @@ spec:
           metadata:
             type: object
           spec:
-            description: MiddlewareSpec defines the desired state of Middleware.
+            description: MiddlewareSpec defines the desired configuration for middleware
+              in the system.
             properties:
               paths:
+                description: |-
+                  Paths defines the list of paths to which the middleware will be applied.
+                  These paths will be protected by the middleware specified in the 'Type' field.
                 items:
                   type: string
                 type: array
               rule:
-                description: Rule contains rule type of
+                description: |-
+                  Rule contains the specific rule or configuration for the middleware.
+                  This field allows for flexible rule configurations, such as access control or rate limiting.
+                  It is represented as a RawExtension to accommodate different formats.
+                  The content of this field depends on the middleware type and is optional.
                 type: object
                 x-kubernetes-preserve-unknown-fields: true
               type:
                 description: |-
-                  Type contains authentication types
-
-                  basic, jwt, auth0, rateLimit, access
+                  Type specifies the type of middleware to be applied.
+                  Available values:
+                  - "basic": Basic authentication.
+                  - "jwt": JSON Web Token (JWT) authentication.
+                  - "auth": Authentication using Auth0 service.
+                  - "rateLimit": Middleware for rate-limiting requests.
+                  - "access": General access control middleware.
+                  - "accessPolicy": Middleware for IP-based access policies.
                 type: string
             required:
             - type

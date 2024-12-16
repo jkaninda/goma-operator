@@ -454,11 +454,6 @@ func (in *RouteSpec) DeepCopyInto(out *RouteSpec) {
 	}
 	in.HealthCheck.DeepCopyInto(&out.HealthCheck)
 	in.Cors.DeepCopyInto(&out.Cors)
-	if in.InterceptErrors != nil {
-		in, out := &in.InterceptErrors, &out.InterceptErrors
-		*out = make([]int, len(*in))
-		copy(*out, *in)
-	}
 	in.ErrorInterceptor.DeepCopyInto(&out.ErrorInterceptor)
 	if in.Middlewares != nil {
 		in, out := &in.Middlewares, &out.Middlewares
@@ -497,11 +492,6 @@ func (in *Server) DeepCopyInto(out *Server) {
 	*out = *in
 	out.Redis = in.Redis
 	in.Cors.DeepCopyInto(&out.Cors)
-	if in.InterceptErrors != nil {
-		in, out := &in.InterceptErrors, &out.InterceptErrors
-		*out = make([]int, len(*in))
-		copy(*out, *in)
-	}
 	in.ErrorInterceptor.DeepCopyInto(&out.ErrorInterceptor)
 }
 

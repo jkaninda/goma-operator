@@ -2,9 +2,6 @@ package controller
 
 import (
 	"context"
-	"encoding/json"
-	"k8s.io/apimachinery/pkg/runtime"
-
 	gomaprojv1beta1 "github.com/jkaninda/goma-operator/api/v1beta1"
 	autoscalingv2 "k8s.io/api/autoscaling/v2"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -112,11 +109,4 @@ func equalHpaSpec(existing, desired autoscalingv2.HorizontalPodAutoscaler) bool 
 		return false
 	}
 	return true
-}
-func ConvertRawExtensionToStruct(raw runtime.RawExtension, out interface{}) error {
-	// Unmarshal the raw JSON into the provided struct
-	if err := json.Unmarshal(raw.Raw, out); err != nil {
-		return err
-	}
-	return nil
 }

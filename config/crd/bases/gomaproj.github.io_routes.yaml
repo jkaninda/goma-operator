@@ -126,13 +126,6 @@ spec:
                 description: InsecureSkipVerify allows skipping TLS certificate verification
                   for backend connections.
                 type: boolean
-              interceptErrors:
-                description: |-
-                  InterceptErrors specifies a list of HTTP status codes for which backend errors should be intercepted.
-                  Deprecated: Use ErrorInterceptor for advanced error handling.
-                items:
-                  type: integer
-                type: array
               methods:
                 description: Methods specifies the HTTP methods allowed for this route
                   (e.g., GET, POST, PUT).

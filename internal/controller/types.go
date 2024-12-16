@@ -40,30 +40,25 @@ type Route struct {
 	// Name defines route name
 	Name string `json:"name" yaml:"name"`
 	// Hosts Domains/hosts based request routing
-	Hosts []string `json:"hosts,omitempty" yaml:"hosts"`
+	Hosts []string `json:"hosts,omitempty" yaml:"hosts,omitempty"`
 	// Rewrite rewrites route path to desired path
-	Rewrite string `json:"rewrite,omitempty" yaml:"rewrite"`
+	Rewrite string `json:"rewrite,omitempty" yaml:"rewrite,omitempty"`
 	// Methods allowed method
-	Methods []string `json:"methods,omitempty" yaml:"methods"`
+	Methods []string `json:"methods,omitempty" yaml:"methods,omitempty"`
 	// Destination Defines backend URL
-	Destination        string   `json:"destination,omitempty" yaml:"destination"`
-	Backends           []string `json:"backends,omitempty" yaml:"backends"`
-	InsecureSkipVerify bool     `json:"insecureSkipVerify,omitempty" yaml:"insecureSkipVerify"`
+	Destination        string   `json:"destination,omitempty" yaml:"destination,omitempty"`
+	Backends           []string `json:"backends,omitempty" yaml:"backends,omitempty"`
+	InsecureSkipVerify bool     `json:"insecureSkipVerify,omitempty" yaml:"insecureSkipVerify,omitempty"`
 	// HealthCheck Defines the backend is health
 	HealthCheck gomaprojv1beta1.RouteHealthCheck `json:"healthCheck,omitempty" yaml:"healthCheck,omitempty"`
 	// Cors contains the route cors headers
-	Cors      gomaprojv1beta1.Cors `json:"cors,omitempty" yaml:"cors"`
-	RateLimit int                  `json:"rateLimit,omitempty" yaml:"rateLimit"`
-	// DisableHostFording Disable host forwarding.
-	DisableHostFording bool `json:"disableHostFording,omitempty" yaml:"disableHostFording"`
-	// InterceptErrors intercepts backend errors based on the status codes
-	InterceptErrors       []int `json:"interceptErrors,omitempty" yaml:"interceptErrors"` // Deprecated
-	DisableHostForwarding bool  `json:"disableHostForwarding,omitempty" yaml:"disableHostForwarding"`
+	Cors                  gomaprojv1beta1.Cors `json:"cors,omitempty" yaml:"cors"`
+	RateLimit             int                  `json:"rateLimit,omitempty" yaml:"rateLimit,omitempty"`
+	DisableHostForwarding bool                 `json:"disableHostForwarding,omitempty" yaml:"disableHostForwarding,omitempty"`
 	//  ErrorInterceptor handles backend error interceptor
 	ErrorInterceptor gomaprojv1beta1.RouteErrorInterceptor `yaml:"errorInterceptor,omitempty" json:"errorInterceptor,omitempty"`
-
 	// BlockCommonExploits enable, disable block common exploits
-	BlockCommonExploits bool `json:"blockCommonExploits,omitempty" yaml:"blockCommonExploits"`
+	BlockCommonExploits bool `json:"blockCommonExploits,omitempty" yaml:"blockCommonExploits,omitempty"`
 	// Middlewares Defines route middleware
 	Middlewares []string `json:"middlewares,omitempty" yaml:"middlewares"`
 }
@@ -79,10 +74,10 @@ type Middleware struct {
 	// Type contains authentication types
 	//
 	// basic, jwt, auth0, rateLimit, access
-	Type  string   `json:"type" yaml:"type"`   // Middleware type [basic, jwt, auth0, rateLimit, access]
-	Paths []string `json:"paths" yaml:"paths"` // Protected paths
+	Type  string   `json:"type" yaml:"type"`                       // Middleware type [basic, jwt, auth0, rateLimit, access]
+	Paths []string `json:"paths,omitempty" yaml:"paths,omitempty"` // Protected paths
 	// Rule contains route middleware rule
-	Rule interface{} `json:"rule" yaml:"rule"`
+	Rule interface{} `json:"rule,omitempty" yaml:"rule,omitempty"`
 }
 
 type Middlewares struct {

@@ -45,10 +45,13 @@ spec:
           metadata:
             type: object
           spec:
-            description: GatewaySpec defines the desired state of Gateway.
+            description: GatewaySpec defines the desired configuration and state of
+              the Gateway deployment.
             properties:
               affinity:
-                description: Affinity is a group of affinity scheduling rules.
+                description: |-
+                  Affinity defines node affinity rules for pod scheduling.
+                  It allows you to specify rules for how pods should be placed on specific nodes, based on labels, zones, or other factors.
                 properties:
                   nodeAffinity:
                     description: Describes node affinity scheduling rules for the
@@ -968,6 +971,9 @@ spec:
                     type: object
                 type: object
               autoScaling:
+                description: |-
+                  AutoScaling defines the settings for enabling or disabling pod autoscaling.
+                  When enabled, it allows Kubernetes to automatically adjust the number of Gateway pods based on usage metrics (e.g., CPU or memory).
                 properties:
                   enabled:
                     type: boolean
@@ -985,12 +991,23 @@ spec:
                     type: integer
                 type: object
               gatewayVersion:
+                description: |-
+                  GatewayVersion specifies the version of the Goma Gateway image to use.
+                  This value is used to pull the desired image for the Goma Gateway service.
+                  Example: "v0.1.4"
                 type: string
               replicaCount:
+                description: |-
+                  ReplicaCount defines the number of replicas for the Gateway deployment.
+                  This field determines how many instances of the Gateway service will run in the cluster.
+                  A higher count provides better availability and fault tolerance.
                 format: int32
                 type: integer
               resources:
-                description: ResourceRequirements describes the compute resource requirements.
+                description: |-
+                  Resources defines the resource requests and limits for the Gateway deployment.
+                  It specifies the amount of CPU and memory the Gateway pods should reserve, as well as any limits.
+                  This helps ensure proper resource allocation and avoids resource contention.
                 properties:
                   claims:
                     description: |-
@@ -1049,6 +1066,9 @@ spec:
                     type: object
                 type: object
               server:
+                description: |-
+                  Server contains the configuration for the Gateway server.
+                  It includes settings related to the server such as port, protocol, and other gateway-related configurations.
                 properties:
                   cors:
                     description: Cors holds the global CORS (Cross-Origin Resource
@@ -1102,13 +1122,6 @@ spec:
                   idleTimeout:
                     description: IdleTimeout defines the proxy's idle timeout in seconds.
                     type: integer
-                  interceptErrors:
-                    description: |-
-                      InterceptErrors lists HTTP status codes for intercepting backend errors.
-                      Deprecated: Use ErrorInterceptor for enhanced error handling.
-                    items:
-                      type: integer
-                    type: array
                   logLevel:
                     description: 'LogLevel specifies the logging level for the proxy.
                       Accepted values: "info", "debug", "trace", "off".'
@@ -1247,21 +1260,34 @@ spec:
           metadata:
             type: object
           spec:
-            description: MiddlewareSpec defines the desired state of Middleware.
+            description: MiddlewareSpec defines the desired configuration for middleware
+              in the system.
             properties:
               paths:
+                description: |-
+                  Paths defines the list of paths to which the middleware will be applied.
+                  These paths will be protected by the middleware specified in the 'Type' field.
                 items:
                   type: string
                 type: array
               rule:
-                description: Rule contains rule type of
+                description: |-
+                  Rule contains the specific rule or configuration for the middleware.
+                  This field allows for flexible rule configurations, such as access control or rate limiting.
+                  It is represented as a RawExtension to accommodate different formats.
+                  The content of this field depends on the middleware type and is optional.
                 type: object
                 x-kubernetes-preserve-unknown-fields: true
               type:
                 description: |-
-                  Type contains authentication types
-
-                  basic, jwt, auth0, rateLimit, access
+                  Type specifies the type of middleware to be applied.
+                  Available values:
+                  - "basic": Basic authentication.
+                  - "jwt": JSON Web Token (JWT) authentication.
+                  - "auth": Authentication using Auth0 service.
+                  - "rateLimit": Middleware for rate-limiting requests.
+                  - "access": General access control middleware.
+                  - "accessPolicy": Middleware for IP-based access policies.
                 type: string
             required:
             - type
@@ -1402,13 +1428,6 @@ spec:
                 description: InsecureSkipVerify allows skipping TLS certificate verification
                   for backend connections.
                 type: boolean
-              interceptErrors:
-                description: |-
-                  InterceptErrors specifies a list of HTTP status codes for which backend errors should be intercepted.
-                  Deprecated: Use ErrorInterceptor for advanced error handling.
-                items:
-                  type: integer
-                type: array
               methods:
                 description: Methods specifies the HTTP methods allowed for this route
                   (e.g., GET, POST, PUT).
