@@ -2,7 +2,9 @@ package controller
 
 import (
 	"context"
+	"encoding/json"
 	"github.com/jinzhu/copier"
+	"k8s.io/apimachinery/pkg/runtime"
 	"slices"
 	"strings"
 
@@ -224,4 +226,11 @@ func mapMid(middleware gomaprojv1beta1.Middleware) *Middleware {
 // Helper function to return a pointer to an int32
 func int32Ptr(i int32) *int32 {
 	return &i
+}
+func ConvertRawExtensionToStruct(raw runtime.RawExtension, out interface{}) error {
+	// Unmarshal the raw JSON into the provided struct
+	if err := json.Unmarshal(raw.Raw, out); err != nil {
+		return err
+	}
+	return nil
 }
