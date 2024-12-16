@@ -73,11 +73,11 @@ type Middleware struct {
 	Name string `json:"name" yaml:"name"`
 	// Type contains authentication types
 	//
-	// basic, jwt, auth0, rateLimit, access
-	Type  string   `json:"type" yaml:"type"`                       // Middleware type [basic, jwt, auth0, rateLimit, access]
-	Paths []string `json:"paths,omitempty" yaml:"paths,omitempty"` // Protected paths
+	// basic, jwt, oauth, rateLimit, access
+	Type  string   `json:"type" yaml:"type"`   // Middleware type [basic, jwt, oauth, rateLimit, access]
+	Paths []string `json:"paths" yaml:"paths"` // Protected paths
 	// Rule contains route middleware rule
-	Rule interface{} `json:"rule,omitempty" yaml:"rule,omitempty"`
+	Rule interface{} `json:"rule" yaml:"rule"`
 }
 
 type Middlewares struct {
