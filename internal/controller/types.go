@@ -59,6 +59,7 @@ type Route struct {
 	ErrorInterceptor gomaprojv1beta1.RouteErrorInterceptor `yaml:"errorInterceptor,omitempty" json:"errorInterceptor,omitempty"`
 	// BlockCommonExploits enable, disable block common exploits
 	BlockCommonExploits bool `json:"blockCommonExploits,omitempty" yaml:"blockCommonExploits,omitempty"`
+	EnableBotDetection  bool `json:"enableBotDetection,omitempty" yaml:"enableBotDetection,omitempty"`
 	// Middlewares Defines route middleware
 	Middlewares []string `json:"middlewares,omitempty" yaml:"middlewares"`
 }
@@ -90,8 +91,17 @@ type GatewayConfig struct {
 	Middlewares []Middleware `json:"middlewares,omitempty" yaml:"middlewares,omitempty"`
 }
 type BasicRuleMiddleware struct {
-	Username string `yaml:"username" json:"username"`
-	Password string `yaml:"password" json:"password"`
+	Realm    string   `yaml:"realm,omitempty" json:"realm,omitempty"`
+	Users    []string `yaml:"users" json:"users"`
+	Username string   `yaml:"username" json:"username"`
+	Password string   `yaml:"password" json:"password"`
+}
+type AddPrefixRuleMiddleware struct {
+	Prefix string `yaml:"prefix" json:"prefix"`
+}
+type RedirectRegexRuleMiddleware struct {
+	Pattern     string `yaml:"pattern" json:"pattern"`
+	Replacement string `yaml:"replacement" json:"replacement"`
 }
 type JWTRuleMiddleware struct {
 	URL             string            `yaml:"url" json:"url"`
