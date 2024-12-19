@@ -46,7 +46,7 @@ type RouteSpec struct {
 	// Cors specifies the CORS (Cross-Origin Resource Sharing) configuration for the route.
 	Cors Cors `json:"cors,omitempty" yaml:"cors"`
 	// RateLimit defines the maximum number of requests allowed per minute for this route.
-	RateLimit int `json:"rateLimit,omitempty" yaml:"rateLimit"`
+	RateLimit int `json:"rateLimit,omitempty" yaml:"rateLimit"` // Deprecated: Use RateLimit middleware instead.
 	// DisableHostFording disables host forwarding for this route.
 	// Deprecated: Use DisableHostForwarding instead.
 	DisableHostFording bool `json:"disableHostFording,omitempty" yaml:"disableHostFording"`
@@ -56,6 +56,8 @@ type RouteSpec struct {
 	ErrorInterceptor RouteErrorInterceptor `yaml:"errorInterceptor,omitempty" json:"errorInterceptor,omitempty"`
 	// BlockCommonExploits enables or disables blocking common exploits, such as basic SQL injection or XSS attempts.
 	BlockCommonExploits bool `json:"blockCommonExploits,omitempty" yaml:"blockCommonExploits"`
+	// EnableBotDetection enables or disables bot detection.
+	EnableBotDetection bool `json:"enableBotDetection,omitempty" yaml:"enableBotDetection"`
 	// Middlewares specifies a list of middleware names to apply to this route.
 	Middlewares []string `json:"middlewares,omitempty" yaml:"middlewares"`
 }

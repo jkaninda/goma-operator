@@ -200,12 +200,14 @@ func mapMid(middleware gomaprojv1beta1.Middleware) *Middleware {
 
 	// Mapping of middleware types to their respective struct types
 	ruleMapping := map[string]interface{}{
-		BasicAuth:    &BasicRuleMiddleware{},
-		OAuth:        &OauthRulerMiddleware{},
-		JWTAuth:      &JWTRuleMiddleware{},
-		ratelimit:    &RateLimitRuleMiddleware{},
-		RateLimit:    &RateLimitRuleMiddleware{},
-		accessPolicy: &AccessPolicyRuleMiddleware{},
+		BasicAuth:                  &BasicRuleMiddleware{},
+		OAuth:                      &OauthRulerMiddleware{},
+		JWTAuth:                    &JWTRuleMiddleware{},
+		RateLimit:                  &RateLimitRuleMiddleware{},
+		strings.ToLower(RateLimit): &RateLimitRuleMiddleware{},
+		accessPolicy:               &AccessPolicyRuleMiddleware{},
+		addPrefix:                  &AddPrefixRuleMiddleware{},
+		redirectRegex:              &RedirectRegexRuleMiddleware{},
 	}
 
 	rule, exists := ruleMapping[middleware.Spec.Type]
