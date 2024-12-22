@@ -76,6 +76,9 @@ spec:
                 description: DisableHostForwarding disables forwarding the host header
                   to the backend.
                 type: boolean
+              enableBotDetection:
+                description: EnableBotDetection enables or disables bot detection.
+                type: boolean
               errorInterceptor:
                 description: ErrorInterceptor defines the configuration for handling
                   backend error interception.
