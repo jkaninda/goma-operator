@@ -93,8 +93,8 @@ type GatewayConfig struct {
 type BasicRuleMiddleware struct {
 	Realm    string   `yaml:"realm,omitempty" json:"realm,omitempty"`
 	Users    []string `yaml:"users" json:"users"`
-	Username string   `yaml:"username" json:"username"`
-	Password string   `yaml:"password" json:"password"`
+	Username string   `yaml:"username,omitempty" json:"username"` // Deprecated
+	Password string   `yaml:"password,omitempty" json:"password"` // Deprecated
 }
 type AddPrefixRuleMiddleware struct {
 	Prefix string `yaml:"prefix" json:"prefix"`
