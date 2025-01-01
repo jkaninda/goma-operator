@@ -208,6 +208,7 @@ func mapMid(middleware gomaprojv1beta1.Middleware) *Middleware {
 		accessPolicy:               &AccessPolicyRuleMiddleware{},
 		addPrefix:                  &AddPrefixRuleMiddleware{},
 		redirectRegex:              &RedirectRegexRuleMiddleware{},
+		forwardAuth:                &ForwardAuthRuleMiddleware{},
 	}
 
 	rule, exists := ruleMapping[middleware.Spec.Type]

@@ -150,3 +150,13 @@ type OauthEndpoint struct {
 	TokenURL    string `yaml:"tokenUrl"`
 	UserInfoURL string `yaml:"userInfoUrl"`
 }
+type ForwardAuthRuleMiddleware struct {
+	AuthURL                     string   `yaml:"authUrl" json:"authUrl"`
+	AuthSignIn                  string   `yaml:"authSignIn,omitempty" json:"authSignIn,omitempty"`
+	EnableHostForwarding        bool     `yaml:"enableHostForwarding,omitempty" json:"enableHostForwarding,omitempty"`
+	SkipInsecureVerify          bool     `yaml:"skipInsecureVerify,omitempty" json:"skipInsecureVerify,omitempty"`
+	AuthRequestHeaders          []string `yaml:"authRequestHeaders,omitempty" json:"authRequestHeaders,omitempty"`
+	AddAuthCookiesToResponse    []string `yaml:"addAuthCookiesToResponse,omitempty" json:"addAuthCookiesToResponse,omitempty"`
+	AuthResponseHeaders         []string `yaml:"authResponseHeaders,omitempty" json:"authResponseHeaders,omitempty"`
+	AuthResponseHeadersAsParams []string `yaml:"authResponseHeadersAsParams,omitempty" json:"authResponseHeadersAsParams,omitempty"`
+}
