@@ -50,6 +50,10 @@ type Server struct {
 	DisableKeepAlive bool `json:"disableKeepAlive,omitempty" yaml:"disableKeepAlive"`
 	// EnableMetrics toggles the collection and exposure of server metrics.
 	EnableMetrics bool `json:"enableMetrics,omitempty" yaml:"enableMetrics"`
+	// EnableStrictSlash enables or disables strict routing and trailing slashes.
+	//
+	// When enabled, the router will match the path with or without a trailing slash.
+	EnableStrictSlash bool `json:"enableStrictSlash,omitempty" yaml:"enableStrictSlash,omitempty"`
 }
 
 type RouteHealthCheck struct {

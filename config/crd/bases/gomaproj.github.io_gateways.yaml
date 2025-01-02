@@ -1089,6 +1089,12 @@ spec:
                     description: EnableMetrics toggles the collection and exposure
                       of server metrics.
                     type: boolean
+                  enableStrictSlash:
+                    description: |-
+                      EnableStrictSlash enables or disables strict routing and trailing slashes.
+
+                      When enabled, the router will match the path with or without a trailing slash.
+                    type: boolean
                   errorInterceptor:
                     description: ErrorInterceptor defines the configuration for intercepting
                       and handling backend errors.
