@@ -298,9 +298,9 @@ func (r *GatewayReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&gomaprojv1beta1.Gateway{}).
 		WithEventFilter(pred).
-		Owns(&corev1.ConfigMap{}). // Watch ConfigMaps created by the controller
-		Owns(&v1.Deployment{}). // Watch Deployments created by the controller
-		Owns(&corev1.Service{}). // Watch Services created by the controller
+		Owns(&corev1.ConfigMap{}).                      // Watch ConfigMaps created by the controller
+		Owns(&v1.Deployment{}).                         // Watch Deployments created by the controller
+		Owns(&corev1.Service{}).                        // Watch Services created by the controller
 		Owns(&autoscalingv1.HorizontalPodAutoscaler{}). // Watch HorizontalPodAutoscaler created by the controller
 		Named("gateway").
 		Complete(r)
