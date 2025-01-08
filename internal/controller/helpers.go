@@ -7,6 +7,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"reflect"
 	"slices"
+	"sort"
 	"strings"
 
 	gomaprojv1beta1 "github.com/jkaninda/goma-operator/api/v1beta1"
@@ -70,6 +71,15 @@ func gatewayConfig(r GatewayReconciler, ctx context.Context, req ctrl.Request, g
 		}
 
 	}
+	// Sort routes
+	sort.Slice(gomaConfig.Gateway.Routes, func(i, j int) bool {
+		return len(gomaConfig.Gateway.Routes[i].Name) < len(gomaConfig.Gateway.Routes[j].Name)
+	})
+	// Sort Middlewares
+	sort.Slice(gomaConfig.Middlewares, func(i, j int) bool {
+		return len(gomaConfig.Middlewares[i].Name) < len(gomaConfig.Middlewares[j].Name)
+	})
+
 	return *gomaConfig
 }
 func updateGatewayConfig(r RouteReconciler, ctx context.Context, req ctrl.Request, gateway gomaprojv1beta1.Gateway) (bool, error) {
@@ -123,6 +133,14 @@ func updateGatewayConfig(r RouteReconciler, ctx context.Context, req ctrl.Reques
 		}
 
 	}
+	// Sort routes
+	sort.Slice(gomaConfig.Gateway.Routes, func(i, j int) bool {
+		return len(gomaConfig.Gateway.Routes[i].Name) < len(gomaConfig.Gateway.Routes[j].Name)
+	})
+	// Sort Middlewares
+	sort.Slice(gomaConfig.Middlewares, func(i, j int) bool {
+		return len(gomaConfig.Middlewares[i].Name) < len(gomaConfig.Middlewares[j].Name)
+	})
 
 	yamlContent, err := yaml.Marshal(&gomaConfig)
 	if err != nil {
@@ -172,10 +190,11 @@ func updateGatewayConfig(r RouteReconciler, ctx context.Context, req ctrl.Reques
 				return false, err
 			}
 			logger.Info("Updated ConfigMap", "ConfigMap.Name", configMap.Name)
+			return true, nil
 
 		}
 	}
-	return true, nil
+	return false, nil
 
 }
 

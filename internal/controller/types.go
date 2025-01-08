@@ -41,6 +41,8 @@ type Route struct {
 	// Name defines route name
 	Name     string `json:"name" yaml:"name"`
 	Disabled bool   `json:"disabled,omitempty" yaml:"disabled"`
+	// Route order priority
+	Priority int `yaml:"priority,omitempty" json:"priority,omitempty"`
 	// Hosts Domains/hosts based request routing
 	Hosts []string `json:"hosts,omitempty" yaml:"hosts,omitempty"`
 	// Rewrite rewrites route path to desired path

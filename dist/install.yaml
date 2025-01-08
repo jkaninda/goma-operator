@@ -1455,6 +1455,9 @@ spec:
               path:
                 description: Path specifies the route path.
                 type: string
+              priority:
+                description: Route order priority
+                type: integer
               rateLimit:
                 description: RateLimit defines the maximum number of requests allowed
                   per minute for this route.
