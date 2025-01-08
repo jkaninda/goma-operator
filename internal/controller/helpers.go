@@ -50,7 +50,7 @@ func gatewayConfig(r GatewayReconciler, ctx context.Context, req ctrl.Request, g
 	}
 	for _, route := range routes.Items {
 		logger.Info("Found Route", "Name", route.Name)
-		if route.Spec.Gateway == gateway.Name {
+		if route.Spec.Gateway == gateway.Name && route.DeletionTimestamp == nil {
 			logger.Info("Found Route", "Name", route.Name)
 			rt := Route{}
 			err := copier.Copy(&rt, &route.Spec)
@@ -110,19 +110,17 @@ func updateGatewayConfig(r RouteReconciler, ctx context.Context, req ctrl.Reques
 	}
 	for _, route := range routes.Items {
 		logger.Info("Found Route", "Name", route.Name)
-		if route.Spec.Gateway == gateway.Name {
-			if route.ObjectMeta.DeletionTimestamp.IsZero() {
-				rt := Route{}
-				err := copier.Copy(&rt, &route.Spec)
-				if err != nil {
-					logger.Error(err, "Failed to deep copy Route", "Name", route.Name)
-					return false, err
-				}
-				rt.Name = route.Name
-				gomaConfig.Gateway.Routes = append(gomaConfig.Gateway.Routes, rt)
-				middlewareNames = append(middlewareNames, rt.Middlewares...)
-
+		if route.Spec.Gateway == gateway.Name && route.DeletionTimestamp == nil {
+			rt := Route{}
+			err := copier.Copy(&rt, &route.Spec)
+			if err != nil {
+				logger.Error(err, "Failed to deep copy Route", "Name", route.Name)
+				return false, err
 			}
+			rt.Name = route.Name
+			gomaConfig.Gateway.Routes = append(gomaConfig.Gateway.Routes, rt)
+			middlewareNames = append(middlewareNames, rt.Middlewares...)
+
 		}
 	}
 	for _, mid := range middlewares.Items {

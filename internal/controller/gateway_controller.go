@@ -73,7 +73,7 @@ func (r *GatewayReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 	}
 
 	// Check if the object is being deleted and if so, handle it
-	if gateway.ObjectMeta.DeletionTimestamp.IsZero() {
+	if gateway.DeletionTimestamp == nil {
 		if !controllerutil.ContainsFinalizer(gateway, FinalizerName) {
 			controllerutil.AddFinalizer(gateway, FinalizerName)
 			err := r.Update(ctx, gateway)
