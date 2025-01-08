@@ -30,13 +30,15 @@ type Gateway struct {
 	// InterceptErrors holds the status codes to intercept the error from backend
 	InterceptErrors       []int `yaml:"interceptErrors,omitempty"` // Deprecated
 	DisableHostForwarding bool  `yaml:"disableHostForwarding"`
+	EnableStrictSlash     bool  `json:"enableStrictSlash,omitempty" yaml:"enableStrictSlash,omitempty"`
 	//  ErrorInterceptor handles backend error interceptor
 	ErrorInterceptor gomaprojv1beta1.RouteErrorInterceptor `yaml:"errorInterceptor,omitempty" json:"errorInterceptor,omitempty"`
 	Routes           []Route                               `json:"routes,omitempty" yaml:"routes,omitempty"`
 }
 type Route struct {
 	// Path defines route path
-	Path string `json:"path" yaml:"path"`
+	Path     string `json:"path" yaml:"path"`
+	Disabled bool   `json:"disabled,omitempty" yaml:"disabled"`
 	// Name defines route name
 	Name string `json:"name" yaml:"name"`
 	// Hosts Domains/hosts based request routing

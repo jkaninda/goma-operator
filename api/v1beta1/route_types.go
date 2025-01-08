@@ -27,6 +27,8 @@ import (
 type RouteSpec struct {
 	// Gateway specifies the name of the Gateway resource associated with this route.
 	Gateway string `json:"gateway"`
+	// Disabled specifies whether the route is disabled.
+	Disabled bool `json:"disabled,omitempty"`
 	// Path specifies the route path.
 	Path string `json:"path" yaml:"path"`
 	// Hosts defines a list of domains or hosts for host-based request routing.

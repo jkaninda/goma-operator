@@ -76,6 +76,9 @@ spec:
                 description: DisableHostForwarding disables forwarding the host header
                   to the backend.
                 type: boolean
+              disabled:
+                description: Disabled specifies whether the route is disabled.
+                type: boolean
               enableBotDetection:
                 description: EnableBotDetection enables or disables bot detection.
                 type: boolean
