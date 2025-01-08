@@ -1097,6 +1097,12 @@ spec:
                     description: EnableMetrics toggles the collection and exposure
                       of server metrics.
                     type: boolean
+                  enableStrictSlash:
+                    description: |-
+                      EnableStrictSlash enables or disables strict routing and trailing slashes.
+
+                      When enabled, the router will match the path with or without a trailing slash.
+                    type: boolean
                   errorInterceptor:
                     description: ErrorInterceptor defines the configuration for intercepting
                       and handling backend errors.
@@ -1377,6 +1383,9 @@ spec:
               disableHostForwarding:
                 description: DisableHostForwarding disables forwarding the host header
                   to the backend.
+                type: boolean
+              disabled:
+                description: Disabled specifies whether the route is disabled.
                 type: boolean
               enableBotDetection:
                 description: EnableBotDetection enables or disables bot detection.
@@ -1870,7 +1879,7 @@ spec:
         - --health-probe-bind-address=:8081
         command:
         - /manager
-        image: jkaninda/goma-operator:latest
+        image: jkaninda/goma-operator:0.1.0
         livenessProbe:
           httpGet:
             path: /healthz

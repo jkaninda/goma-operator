@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"github.com/jinzhu/copier"
 	"k8s.io/apimachinery/pkg/runtime"
+	"reflect"
 	"slices"
 	"strings"
 
@@ -143,8 +144,8 @@ func updateGatewayConfig(r RouteReconciler, ctx context.Context, req ctrl.Reques
 		},
 	}
 	// Check if the ConfigMap already exists
-	var existingConfigMap corev1.ConfigMap
-	err = r.Get(ctx, types.NamespacedName{Name: configMap.Name, Namespace: configMap.Namespace}, &existingConfigMap)
+	existingConfigMap := &corev1.ConfigMap{}
+	err = r.Get(ctx, types.NamespacedName{Name: configMap.Name, Namespace: configMap.Namespace}, existingConfigMap)
 	if err != nil && client.IgnoreNotFound(err) != nil {
 		logger.Error(err, "Failed to get ConfigMap")
 		return false, err
@@ -163,31 +164,19 @@ func updateGatewayConfig(r RouteReconciler, ctx context.Context, req ctrl.Reques
 		logger.Info("Created ConfigMap", "ConfigMap.Name", configMap.Name)
 	} else {
 		// Optional: Update the ConfigMap if needed
-		if !equalConfigMapData(existingConfigMap.Data, configMap.Data) {
+		if !reflect.DeepEqual(existingConfigMap.Data, configMap.Data) {
+			logger.Info("Updating ConfigMap...", "ConfigMap.Name", configMap.Name)
+			// ConfigMap data is not equal, update it
 			existingConfigMap.Data = configMap.Data
-			if err = r.Update(ctx, &existingConfigMap); err != nil {
-				logger.Error(err, "Failed to update ConfigMap")
+			if err = r.Update(ctx, existingConfigMap); err != nil {
 				return false, err
 			}
 			logger.Info("Updated ConfigMap", "ConfigMap.Name", configMap.Name)
-		}
 
+		}
 	}
 	return true, nil
 
-}
-
-// Helper function to compare ConfigMap data
-func equalConfigMapData(existing, desired map[string]string) bool {
-	if len(existing) != len(desired) {
-		return false
-	}
-	for key, value := range desired {
-		if existing[key] != value {
-			return false
-		}
-	}
-	return true
 }
 
 // mapMid converts RawExtension to struct

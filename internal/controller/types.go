@@ -37,10 +37,10 @@ type Gateway struct {
 }
 type Route struct {
 	// Path defines route path
-	Path     string `json:"path" yaml:"path"`
-	Disabled bool   `json:"disabled,omitempty" yaml:"disabled"`
+	Path string `json:"path" yaml:"path"`
 	// Name defines route name
-	Name string `json:"name" yaml:"name"`
+	Name     string `json:"name" yaml:"name"`
+	Disabled bool   `json:"disabled,omitempty" yaml:"disabled"`
 	// Hosts Domains/hosts based request routing
 	Hosts []string `json:"hosts,omitempty" yaml:"hosts,omitempty"`
 	// Rewrite rewrites route path to desired path

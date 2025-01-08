@@ -27,6 +27,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
+	"reflect"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
@@ -124,8 +125,8 @@ func (r *GatewayReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		},
 	}
 	// Check if the ConfigMap already exists
-	var existingConfigMap corev1.ConfigMap
-	err = r.Get(ctx, types.NamespacedName{Name: configMap.Name, Namespace: configMap.Namespace}, &existingConfigMap)
+	existingConfigMap := &corev1.ConfigMap{}
+	err = r.Get(ctx, types.NamespacedName{Name: configMap.Name, Namespace: configMap.Namespace}, existingConfigMap)
 	if err != nil && client.IgnoreNotFound(err) != nil {
 		logger.Error(err, "Failed to get ConfigMap")
 		return ctrl.Result{}, err
@@ -145,9 +146,10 @@ func (r *GatewayReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		logger.Info("Created ConfigMap", "ConfigMap.Name", configMap.Name)
 	} else {
 		// Optional: Update the ConfigMap if needed
-		if !equalConfigMapData(existingConfigMap.Data, configMap.Data) {
+		if !reflect.DeepEqual(existingConfigMap.Data, configMap.Data) {
+			logger.Info("Updating ConfigMap...", "ConfigMap.Name", configMap.Name)
 			existingConfigMap.Data = configMap.Data
-			if err := r.Update(ctx, &existingConfigMap); err != nil {
+			if err := r.Update(ctx, existingConfigMap); err != nil {
 				logger.Error(err, "Failed to update ConfigMap")
 				addCondition(&gateway.Status, "ConfigMapReady", metav1.ConditionFalse, "ConfigMapReady", "Failed to update ConfigMap for Gateway")
 				return ctrl.Result{}, err
@@ -296,9 +298,9 @@ func (r *GatewayReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&gomaprojv1beta1.Gateway{}).
 		WithEventFilter(pred).
-		Owns(&corev1.ConfigMap{}).                      // Watch ConfigMaps created by the controller
-		Owns(&v1.Deployment{}).                         // Watch Deployments created by the controller
-		Owns(&corev1.Service{}).                        // Watch Services created by the controller
+		Owns(&corev1.ConfigMap{}). // Watch ConfigMaps created by the controller
+		Owns(&v1.Deployment{}). // Watch Deployments created by the controller
+		Owns(&corev1.Service{}). // Watch Services created by the controller
 		Owns(&autoscalingv1.HorizontalPodAutoscaler{}). // Watch HorizontalPodAutoscaler created by the controller
 		Named("gateway").
 		Complete(r)

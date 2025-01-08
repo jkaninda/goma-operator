@@ -20,12 +20,11 @@ import (
 	"context"
 	"fmt"
 	gomaprojv1beta1 "github.com/jkaninda/goma-operator/api/v1beta1"
-	"k8s.io/apimachinery/pkg/types"
-	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
-
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 )
 
@@ -110,6 +109,8 @@ func (r *RouteReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 
 		}
 	}
+
+	logger.Info("Reconciliation complete")
 	return ctrl.Result{}, nil
 }
 
