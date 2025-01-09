@@ -1102,16 +1102,21 @@ spec:
                       contentType:
                         type: string
                       enabled:
+                        description: Enabled, enable and disable backend errors interceptor
                         type: boolean
                       errors:
+                        description: Errors provides configuration for handling backend
+                          errors.
                         items:
                           properties:
                             body:
+                              description: Body, contains error response custom body
                               type: string
                             code:
                               type: integer
-                          required:
-                          - code
+                            status:
+                              description: Status contains the status code to intercept
+                              type: integer
                           type: object
                         type: array
                     required:

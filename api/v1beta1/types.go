@@ -68,11 +68,16 @@ type Redis struct {
 	Password string `json:"password,omitempty" yaml:"password,omitempty"`
 }
 type RouteErrorInterceptor struct {
-	Enabled     bool         `yaml:"enabled" json:"enabled"`
-	ContentType string       `yaml:"contentType,omitempty,omitempty" json:"contentType,omitempty"`
-	Errors      []RouteError `yaml:"errors,omitempty" json:"errors,omitempty"`
+	// Enabled, enable and disable backend errors interceptor
+	Enabled     bool   `yaml:"enabled" json:"enabled"`
+	ContentType string `yaml:"contentType,omitempty,omitempty" json:"contentType,omitempty"`
+	// Errors provides configuration for handling backend errors.
+	Errors []RouteError `yaml:"errors,omitempty" json:"errors,omitempty"`
 }
 type RouteError struct {
-	Code int    `yaml:"code" json:"code"`
+	Code int `yaml:"code,omitempty" json:"code,omitempty"` // Deprecated
+	// Status contains the status code to intercept
+	Status int `yaml:"status,omitempty" json:"status,omitempty"`
+	// Body, contains error response custom body
 	Body string `yaml:"body,omitempty,omitempty" json:"body,omitempty"`
 }
