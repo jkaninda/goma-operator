@@ -11,6 +11,7 @@ A Kubernetes operator for managing Goma Gateway.
 
 - [Docker Hub](https://hub.docker.com/r/jkaninda/goma-operator)
 - [Github](https://github.com/jkaninda/goma-operator)
+- [Goma Gateway](https://github.com/jkaninda/goma-gateway)
 
 ### Documentation is found at <https://jkaninda.github.io/goma-gateway/operator-manual/installation.html>
 
