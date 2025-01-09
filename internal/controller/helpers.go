@@ -5,7 +5,9 @@ import (
 	"encoding/json"
 	"github.com/jinzhu/copier"
 	"k8s.io/apimachinery/pkg/runtime"
+	"reflect"
 	"slices"
+	"sort"
 	"strings"
 
 	gomaprojv1beta1 "github.com/jkaninda/goma-operator/api/v1beta1"
@@ -48,7 +50,7 @@ func gatewayConfig(r GatewayReconciler, ctx context.Context, req ctrl.Request, g
 	}
 	for _, route := range routes.Items {
 		logger.Info("Found Route", "Name", route.Name)
-		if route.Spec.Gateway == gateway.Name {
+		if route.Spec.Gateway == gateway.Name && route.DeletionTimestamp == nil {
 			logger.Info("Found Route", "Name", route.Name)
 			rt := Route{}
 			err := copier.Copy(&rt, &route.Spec)
@@ -69,6 +71,15 @@ func gatewayConfig(r GatewayReconciler, ctx context.Context, req ctrl.Request, g
 		}
 
 	}
+	// Sort routes
+	sort.Slice(gomaConfig.Gateway.Routes, func(i, j int) bool {
+		return len(gomaConfig.Gateway.Routes[i].Name) < len(gomaConfig.Gateway.Routes[j].Name)
+	})
+	// Sort Middlewares
+	sort.Slice(gomaConfig.Middlewares, func(i, j int) bool {
+		return len(gomaConfig.Middlewares[i].Name) < len(gomaConfig.Middlewares[j].Name)
+	})
+
 	return *gomaConfig
 }
 func updateGatewayConfig(r RouteReconciler, ctx context.Context, req ctrl.Request, gateway gomaprojv1beta1.Gateway) (bool, error) {
@@ -99,19 +110,17 @@ func updateGatewayConfig(r RouteReconciler, ctx context.Context, req ctrl.Reques
 	}
 	for _, route := range routes.Items {
 		logger.Info("Found Route", "Name", route.Name)
-		if route.Spec.Gateway == gateway.Name {
-			if route.ObjectMeta.DeletionTimestamp.IsZero() {
-				rt := Route{}
-				err := copier.Copy(&rt, &route.Spec)
-				if err != nil {
-					logger.Error(err, "Failed to deep copy Route", "Name", route.Name)
-					return false, err
-				}
-				rt.Name = route.Name
-				gomaConfig.Gateway.Routes = append(gomaConfig.Gateway.Routes, rt)
-				middlewareNames = append(middlewareNames, rt.Middlewares...)
-
+		if route.Spec.Gateway == gateway.Name && route.DeletionTimestamp == nil {
+			rt := Route{}
+			err := copier.Copy(&rt, &route.Spec)
+			if err != nil {
+				logger.Error(err, "Failed to deep copy Route", "Name", route.Name)
+				return false, err
 			}
+			rt.Name = route.Name
+			gomaConfig.Gateway.Routes = append(gomaConfig.Gateway.Routes, rt)
+			middlewareNames = append(middlewareNames, rt.Middlewares...)
+
 		}
 	}
 	for _, mid := range middlewares.Items {
@@ -122,6 +131,14 @@ func updateGatewayConfig(r RouteReconciler, ctx context.Context, req ctrl.Reques
 		}
 
 	}
+	// Sort routes
+	sort.Slice(gomaConfig.Gateway.Routes, func(i, j int) bool {
+		return len(gomaConfig.Gateway.Routes[i].Name) < len(gomaConfig.Gateway.Routes[j].Name)
+	})
+	// Sort Middlewares
+	sort.Slice(gomaConfig.Middlewares, func(i, j int) bool {
+		return len(gomaConfig.Middlewares[i].Name) < len(gomaConfig.Middlewares[j].Name)
+	})
 
 	yamlContent, err := yaml.Marshal(&gomaConfig)
 	if err != nil {
@@ -143,8 +160,8 @@ func updateGatewayConfig(r RouteReconciler, ctx context.Context, req ctrl.Reques
 		},
 	}
 	// Check if the ConfigMap already exists
-	var existingConfigMap corev1.ConfigMap
-	err = r.Get(ctx, types.NamespacedName{Name: configMap.Name, Namespace: configMap.Namespace}, &existingConfigMap)
+	existingConfigMap := &corev1.ConfigMap{}
+	err = r.Get(ctx, types.NamespacedName{Name: configMap.Name, Namespace: configMap.Namespace}, existingConfigMap)
 	if err != nil && client.IgnoreNotFound(err) != nil {
 		logger.Error(err, "Failed to get ConfigMap")
 		return false, err
@@ -163,31 +180,20 @@ func updateGatewayConfig(r RouteReconciler, ctx context.Context, req ctrl.Reques
 		logger.Info("Created ConfigMap", "ConfigMap.Name", configMap.Name)
 	} else {
 		// Optional: Update the ConfigMap if needed
-		if !equalConfigMapData(existingConfigMap.Data, configMap.Data) {
+		if !reflect.DeepEqual(existingConfigMap.Data, configMap.Data) {
+			logger.Info("Updating ConfigMap...", "ConfigMap.Name", configMap.Name)
+			// ConfigMap data is not equal, update it
 			existingConfigMap.Data = configMap.Data
-			if err = r.Update(ctx, &existingConfigMap); err != nil {
-				logger.Error(err, "Failed to update ConfigMap")
+			if err = r.Update(ctx, existingConfigMap); err != nil {
 				return false, err
 			}
 			logger.Info("Updated ConfigMap", "ConfigMap.Name", configMap.Name)
-		}
+			return true, nil
 
-	}
-	return true, nil
-
-}
-
-// Helper function to compare ConfigMap data
-func equalConfigMapData(existing, desired map[string]string) bool {
-	if len(existing) != len(desired) {
-		return false
-	}
-	for key, value := range desired {
-		if existing[key] != value {
-			return false
 		}
 	}
-	return true
+	return false, nil
+
 }
 
 // mapMid converts RawExtension to struct
@@ -208,6 +214,7 @@ func mapMid(middleware gomaprojv1beta1.Middleware) *Middleware {
 		accessPolicy:               &AccessPolicyRuleMiddleware{},
 		addPrefix:                  &AddPrefixRuleMiddleware{},
 		redirectRegex:              &RedirectRegexRuleMiddleware{},
+		forwardAuth:                &ForwardAuthRuleMiddleware{},
 	}
 
 	rule, exists := ruleMapping[middleware.Spec.Type]

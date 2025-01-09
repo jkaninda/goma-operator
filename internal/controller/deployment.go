@@ -100,8 +100,9 @@ func createUpdateDeployment(r GatewayReconciler, ctx context.Context, req ctrl.R
 								},
 							},
 							ReadinessProbe: &corev1.Probe{
-								InitialDelaySeconds: 15,
+								InitialDelaySeconds: 10,
 								PeriodSeconds:       10,
+								TimeoutSeconds:      5,
 								ProbeHandler: corev1.ProbeHandler{
 									HTTPGet: &corev1.HTTPGetAction{
 										Path: "/readyz",
@@ -110,8 +111,9 @@ func createUpdateDeployment(r GatewayReconciler, ctx context.Context, req ctrl.R
 								},
 							},
 							LivenessProbe: &corev1.Probe{
-								InitialDelaySeconds: 30,
-								PeriodSeconds:       30,
+								InitialDelaySeconds: 15,
+								PeriodSeconds:       10,
+								TimeoutSeconds:      5,
 								ProbeHandler: corev1.ProbeHandler{
 									HTTPGet: &corev1.HTTPGetAction{
 										Path: "/healthz",

@@ -1,6 +1,6 @@
 # Image URL to use all building/pushing image targets
 IMG ?= jkaninda/goma-operator
-TAG ?=0.1.0
+TAG ?=0.1.1
 # ENVTEST_K8S_VERSION refers to the version of kubebuilder assets to be downloaded by envtest binary.
 ENVTEST_K8S_VERSION = 1.31.0
 
@@ -130,7 +130,7 @@ docker-buildx: ## Build and push docker image for the manager for cross-platform
 .PHONY: build-installer
 build-installer: manifests generate kustomize ## Generate a consolidated YAML with CRDs and deployment.
 	mkdir -p dist
-	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
+	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}:${TAG}
 	$(KUSTOMIZE) build config/default > dist/install.yaml
 
 ##@ Deployment

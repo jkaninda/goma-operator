@@ -29,6 +29,10 @@ type RouteSpec struct {
 	Gateway string `json:"gateway"`
 	// Path specifies the route path.
 	Path string `json:"path" yaml:"path"`
+	// Disabled specifies whether the route is disabled.
+	Disabled bool `json:"disabled,omitempty"`
+	// Route order priority
+	Priority int `yaml:"priority,omitempty" json:"priority,omitempty"`
 	// Hosts defines a list of domains or hosts for host-based request routing.
 	Hosts []string `json:"hosts,omitempty" yaml:"hosts"`
 	// Rewrite specifies the new path to rewrite the incoming route path to.

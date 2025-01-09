@@ -1097,6 +1097,12 @@ spec:
                     description: EnableMetrics toggles the collection and exposure
                       of server metrics.
                     type: boolean
+                  enableStrictSlash:
+                    description: |-
+                      EnableStrictSlash enables or disables strict routing and trailing slashes.
+
+                      When enabled, the router will match the path with or without a trailing slash.
+                    type: boolean
                   errorInterceptor:
                     description: ErrorInterceptor defines the configuration for intercepting
                       and handling backend errors.
@@ -1104,16 +1110,21 @@ spec:
                       contentType:
                         type: string
                       enabled:
+                        description: Enabled, enable and disable backend errors interceptor
                         type: boolean
                       errors:
+                        description: Errors provides configuration for handling backend
+                          errors.
                         items:
                           properties:
                             body:
+                              description: Body, contains error response custom body
                               type: string
                             code:
                               type: integer
-                          required:
-                          - code
+                            status:
+                              description: Status contains the status code to intercept
+                              type: integer
                           type: object
                         type: array
                     required:
@@ -1378,6 +1389,12 @@ spec:
                 description: DisableHostForwarding disables forwarding the host header
                   to the backend.
                 type: boolean
+              disabled:
+                description: Disabled specifies whether the route is disabled.
+                type: boolean
+              enableBotDetection:
+                description: EnableBotDetection enables or disables bot detection.
+                type: boolean
               errorInterceptor:
                 description: ErrorInterceptor defines the configuration for handling
                   backend error interception.
@@ -1385,16 +1402,21 @@ spec:
                   contentType:
                     type: string
                   enabled:
+                    description: Enabled, enable and disable backend errors interceptor
                     type: boolean
                   errors:
+                    description: Errors provides configuration for handling backend
+                      errors.
                     items:
                       properties:
                         body:
+                          description: Body, contains error response custom body
                           type: string
                         code:
                           type: integer
-                      required:
-                      - code
+                        status:
+                          description: Status contains the status code to intercept
+                          type: integer
                       type: object
                     type: array
                 required:
@@ -1443,6 +1465,9 @@ spec:
               path:
                 description: Path specifies the route path.
                 type: string
+              priority:
+                description: Route order priority
+                type: integer
               rateLimit:
                 description: RateLimit defines the maximum number of requests allowed
                   per minute for this route.
@@ -1867,7 +1892,7 @@ spec:
         - --health-probe-bind-address=:8081
         command:
         - /manager
-        image: jkaninda/goma-operator:0.1.0
+        image: jkaninda/goma-operator:0.1.1
         livenessProbe:
           httpGet:
             path: /healthz

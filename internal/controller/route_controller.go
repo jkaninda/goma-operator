@@ -18,14 +18,13 @@ package controller
 
 import (
 	"context"
-	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
-
+	"fmt"
 	gomaprojv1beta1 "github.com/jkaninda/goma-operator/api/v1beta1"
-	"k8s.io/apimachinery/pkg/types"
-
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 )
 
@@ -67,34 +66,35 @@ func (r *RouteReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		return ctrl.Result{}, err
 	}
 
-	// Check if the object is being deleted and if so, handle it
+	// Handle finalizer logic
 	if route.ObjectMeta.DeletionTimestamp.IsZero() {
+		// Object is not being deleted: ensure the finalizer is added
 		if !controllerutil.ContainsFinalizer(route, FinalizerName) {
 			controllerutil.AddFinalizer(route, FinalizerName)
-			err := r.Update(ctx, route)
-			if err != nil {
-				return ctrl.Result{}, err
+			if err := r.Update(ctx, route); err != nil {
+				return ctrl.Result{}, fmt.Errorf("failed to add finalizer: %w", err)
 			}
 		}
 	} else {
+		// Object is being deleted: handle finalization logic
 		if controllerutil.ContainsFinalizer(route, FinalizerName) {
-			// Once finalization is done, remove the finalizer
-			ok, err := updateGatewayConfig(*r, ctx, req, gateway)
+			// Execute finalization steps
+			completed, err := updateGatewayConfig(*r, ctx, req, gateway)
 			if err != nil {
-				return ctrl.Result{}, err
+				return ctrl.Result{}, fmt.Errorf("failed to update gateway config: %w", err)
 			}
-			if ok {
-				if err = restartDeployment(r.Client, ctx, req, &gateway); err != nil {
-					return ctrl.Result{}, err
+			if completed {
+				if err := restartDeployment(r.Client, ctx, req, &gateway); err != nil {
+					return ctrl.Result{}, fmt.Errorf("failed to restart deployment: %w", err)
 				}
 			}
-			//  Remove the finalizer
+			// Remove the finalizer after successful cleanup
 			controllerutil.RemoveFinalizer(route, FinalizerName)
-			err = r.Update(ctx, route)
-			if err != nil {
-				return ctrl.Result{}, err
+			if err := r.Update(ctx, route); err != nil {
+				return ctrl.Result{}, fmt.Errorf("failed to remove finalizer: %w", err)
 			}
 		}
+		// No further reconciliation needed for a deleted object
 		return ctrl.Result{}, nil
 	}
 
@@ -109,6 +109,8 @@ func (r *RouteReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 
 		}
 	}
+
+	logger.Info("Reconciliation complete")
 	return ctrl.Result{}, nil
 }
 

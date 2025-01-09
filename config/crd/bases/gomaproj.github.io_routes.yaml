@@ -76,6 +76,9 @@ spec:
                 description: DisableHostForwarding disables forwarding the host header
                   to the backend.
                 type: boolean
+              disabled:
+                description: Disabled specifies whether the route is disabled.
+                type: boolean
               enableBotDetection:
                 description: EnableBotDetection enables or disables bot detection.
                 type: boolean
@@ -86,16 +89,21 @@ spec:
                   contentType:
                     type: string
                   enabled:
+                    description: Enabled, enable and disable backend errors interceptor
                     type: boolean
                   errors:
+                    description: Errors provides configuration for handling backend
+                      errors.
                     items:
                       properties:
                         body:
+                          description: Body, contains error response custom body
                           type: string
                         code:
                           type: integer
-                      required:
-                      - code
+                        status:
+                          description: Status contains the status code to intercept
+                          type: integer
                       type: object
                     type: array
                 required:
@@ -144,6 +152,9 @@ spec:
               path:
                 description: Path specifies the route path.
                 type: string
+              priority:
+                description: Route order priority
+                type: integer
               rateLimit:
                 description: RateLimit defines the maximum number of requests allowed
                   per minute for this route.

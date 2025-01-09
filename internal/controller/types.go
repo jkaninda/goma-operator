@@ -30,6 +30,7 @@ type Gateway struct {
 	// InterceptErrors holds the status codes to intercept the error from backend
 	InterceptErrors       []int `yaml:"interceptErrors,omitempty"` // Deprecated
 	DisableHostForwarding bool  `yaml:"disableHostForwarding"`
+	EnableStrictSlash     bool  `json:"enableStrictSlash,omitempty" yaml:"enableStrictSlash,omitempty"`
 	//  ErrorInterceptor handles backend error interceptor
 	ErrorInterceptor gomaprojv1beta1.RouteErrorInterceptor `yaml:"errorInterceptor,omitempty" json:"errorInterceptor,omitempty"`
 	Routes           []Route                               `json:"routes,omitempty" yaml:"routes,omitempty"`
@@ -38,7 +39,10 @@ type Route struct {
 	// Path defines route path
 	Path string `json:"path" yaml:"path"`
 	// Name defines route name
-	Name string `json:"name" yaml:"name"`
+	Name     string `json:"name" yaml:"name"`
+	Disabled bool   `json:"disabled,omitempty" yaml:"disabled"`
+	// Route order priority
+	Priority int `yaml:"priority,omitempty" json:"priority,omitempty"`
 	// Hosts Domains/hosts based request routing
 	Hosts []string `json:"hosts,omitempty" yaml:"hosts,omitempty"`
 	// Rewrite rewrites route path to desired path
@@ -93,8 +97,8 @@ type GatewayConfig struct {
 type BasicRuleMiddleware struct {
 	Realm    string   `yaml:"realm,omitempty" json:"realm,omitempty"`
 	Users    []string `yaml:"users" json:"users"`
-	Username string   `yaml:"username" json:"username"`
-	Password string   `yaml:"password" json:"password"`
+	Username string   `yaml:"username,omitempty" json:"username"` // Deprecated
+	Password string   `yaml:"password,omitempty" json:"password"` // Deprecated
 }
 type AddPrefixRuleMiddleware struct {
 	Prefix string `yaml:"prefix" json:"prefix"`
@@ -149,4 +153,14 @@ type OauthEndpoint struct {
 	AuthURL     string `yaml:"authUrl"`
 	TokenURL    string `yaml:"tokenUrl"`
 	UserInfoURL string `yaml:"userInfoUrl"`
+}
+type ForwardAuthRuleMiddleware struct {
+	AuthURL                     string   `yaml:"authUrl" json:"authUrl"`
+	AuthSignIn                  string   `yaml:"authSignIn,omitempty" json:"authSignIn,omitempty"`
+	EnableHostForwarding        bool     `yaml:"enableHostForwarding,omitempty" json:"enableHostForwarding,omitempty"`
+	SkipInsecureVerify          bool     `yaml:"skipInsecureVerify,omitempty" json:"skipInsecureVerify,omitempty"`
+	AuthRequestHeaders          []string `yaml:"authRequestHeaders,omitempty" json:"authRequestHeaders,omitempty"`
+	AddAuthCookiesToResponse    []string `yaml:"addAuthCookiesToResponse,omitempty" json:"addAuthCookiesToResponse,omitempty"`
+	AuthResponseHeaders         []string `yaml:"authResponseHeaders,omitempty" json:"authResponseHeaders,omitempty"`
+	AuthResponseHeadersAsParams []string `yaml:"authResponseHeadersAsParams,omitempty" json:"authResponseHeadersAsParams,omitempty"`
 }
