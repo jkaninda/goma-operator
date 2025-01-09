@@ -1110,16 +1110,21 @@ spec:
                       contentType:
                         type: string
                       enabled:
+                        description: Enabled, enable and disable backend errors interceptor
                         type: boolean
                       errors:
+                        description: Errors provides configuration for handling backend
+                          errors.
                         items:
                           properties:
                             body:
+                              description: Body, contains error response custom body
                               type: string
                             code:
                               type: integer
-                          required:
-                          - code
+                            status:
+                              description: Status contains the status code to intercept
+                              type: integer
                           type: object
                         type: array
                     required:
@@ -1397,16 +1402,21 @@ spec:
                   contentType:
                     type: string
                   enabled:
+                    description: Enabled, enable and disable backend errors interceptor
                     type: boolean
                   errors:
+                    description: Errors provides configuration for handling backend
+                      errors.
                     items:
                       properties:
                         body:
+                          description: Body, contains error response custom body
                           type: string
                         code:
                           type: integer
-                      required:
-                      - code
+                        status:
+                          description: Status contains the status code to intercept
+                          type: integer
                       type: object
                     type: array
                 required:
@@ -1882,7 +1892,7 @@ spec:
         - --health-probe-bind-address=:8081
         command:
         - /manager
-        image: jkaninda/goma-operator:0.1.0
+        image: jkaninda/goma-operator:0.1.1
         livenessProbe:
           httpGet:
             path: /healthz
