@@ -153,7 +153,7 @@ func (r *GatewayReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		if !reflect.DeepEqual(existingConfigMap.Data, configMap.Data) {
 			logger.Info("Updating ConfigMap...", "ConfigMap.Name", configMap.Name)
 			existingConfigMap.Data = configMap.Data
-			if err := r.Update(ctx, existingConfigMap); err != nil {
+			if err = r.Update(ctx, existingConfigMap); err != nil {
 				logger.Error(err, "Failed to update ConfigMap")
 				addCondition(&gateway.Status, "ConfigMapReady", metav1.ConditionFalse, "ConfigMapReady", "Failed to update ConfigMap for Gateway")
 				return ctrl.Result{}, err

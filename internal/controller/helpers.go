@@ -3,7 +3,6 @@ package controller
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"github.com/jinzhu/copier"
 	"k8s.io/apimachinery/pkg/runtime"
 	"reflect"
@@ -50,9 +49,7 @@ func gatewayConfig(r GatewayReconciler, ctx context.Context, req ctrl.Request, g
 		return *gomaConfig
 	}
 	for _, route := range routes.Items {
-		logger.Info("Found Route", "Name", route.Name)
 		if route.Spec.Gateway == gateway.Name && route.DeletionTimestamp == nil {
-			logger.Info("Found Route", "Name", route.Name)
 			rt := Route{}
 			err := copier.Copy(&rt, &route.Spec)
 			if err != nil {
@@ -65,21 +62,18 @@ func gatewayConfig(r GatewayReconciler, ctx context.Context, req ctrl.Request, g
 		}
 	}
 	for _, mid := range middlewares.Items {
-		middleware := *mapMid(mid)
-		logger.Info("Adding Middleware", "Name", middleware.Name)
-		if slices.Contains(middlewareNames, middleware.Name) {
-			gomaConfig.Middlewares = append(gomaConfig.Middlewares, middleware)
+		if mid.DeletionTimestamp == nil {
+			middleware := *mapMid(mid)
+			if slices.Contains(middlewareNames, middleware.Name) {
+				gomaConfig.Middlewares = append(gomaConfig.Middlewares, middleware)
+			}
 		}
 
 	}
-	// Sort routes
-	sort.Slice(gomaConfig.Gateway.Routes, func(i, j int) bool {
-		return len(gomaConfig.Gateway.Routes[i].Name) < len(gomaConfig.Gateway.Routes[j].Name)
-	})
-	// Sort Middlewares
-	sort.Slice(gomaConfig.Middlewares, func(i, j int) bool {
-		return len(gomaConfig.Middlewares[i].Name) < len(gomaConfig.Middlewares[j].Name)
-	})
+	// Sort routes by name
+	sort.Sort(RouteByName(gomaConfig.Gateway.Routes))
+	// Sort middlewares by name
+	sort.Sort(MiddlewareByName(gomaConfig.Middlewares))
 
 	return *gomaConfig
 }
@@ -111,7 +105,6 @@ func updateGatewayConfig(r RouteReconciler, ctx context.Context, req ctrl.Reques
 	}
 	for _, route := range routes.Items {
 		if route.Spec.Gateway == gateway.Name && route.DeletionTimestamp == nil {
-			logger.Info(fmt.Sprintf("Attaching route: %s to Gateway: %s", route.Name, gateway.Name))
 			rt := Route{}
 			err = copier.Copy(&rt, &route.Spec)
 			if err != nil {
@@ -125,21 +118,18 @@ func updateGatewayConfig(r RouteReconciler, ctx context.Context, req ctrl.Reques
 		}
 	}
 	for _, mid := range middlewares.Items {
-		middleware := *mapMid(mid)
-		logger.Info("Adding Middleware", "Name", middleware.Name)
-		if slices.Contains(middlewareNames, middleware.Name) {
-			gomaConfig.Middlewares = append(gomaConfig.Middlewares, middleware)
+		if mid.DeletionTimestamp == nil {
+			middleware := *mapMid(mid)
+			if slices.Contains(middlewareNames, middleware.Name) {
+				gomaConfig.Middlewares = append(gomaConfig.Middlewares, middleware)
+			}
 		}
 
 	}
-	// Sort routes
-	sort.Slice(gomaConfig.Gateway.Routes, func(i, j int) bool {
-		return len(gomaConfig.Gateway.Routes[i].Name) < len(gomaConfig.Gateway.Routes[j].Name)
-	})
-	// Sort Middlewares
-	sort.Slice(gomaConfig.Middlewares, func(i, j int) bool {
-		return len(gomaConfig.Middlewares[i].Name) < len(gomaConfig.Middlewares[j].Name)
-	})
+	// Sort routes by name
+	sort.Sort(RouteByName(gomaConfig.Gateway.Routes))
+	// Sort middlewares by name
+	sort.Sort(MiddlewareByName(gomaConfig.Middlewares))
 
 	yamlContent, err := yaml.Marshal(&gomaConfig)
 	if err != nil {
@@ -192,6 +182,7 @@ func updateGatewayConfig(r RouteReconciler, ctx context.Context, req ctrl.Reques
 			return true, nil
 
 		}
+
 	}
 	return false, nil
 
