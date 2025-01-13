@@ -992,7 +992,7 @@ spec:
                 type: object
               gatewayVersion:
                 description: |-
-                  Deprecated
+                  Deprecated,
                   Please use ImageName instead
                 type: string
               imageName:

@@ -3,6 +3,7 @@ package controller
 import (
 	"context"
 	"fmt"
+	"reflect"
 	"time"
 
 	gomaprojv1beta1 "github.com/jkaninda/goma-operator/api/v1beta1"
@@ -99,9 +100,9 @@ func createUpdateDeployment(r GatewayReconciler, ctx context.Context, req ctrl.R
 								},
 							},
 							ReadinessProbe: &corev1.Probe{
-								InitialDelaySeconds: 10,
+								InitialDelaySeconds: 5,
 								PeriodSeconds:       10,
-								TimeoutSeconds:      10,
+								TimeoutSeconds:      5,
 								ProbeHandler: corev1.ProbeHandler{
 									HTTPGet: &corev1.HTTPGetAction{
 										Path: "/readyz",
@@ -112,7 +113,7 @@ func createUpdateDeployment(r GatewayReconciler, ctx context.Context, req ctrl.R
 							LivenessProbe: &corev1.Probe{
 								InitialDelaySeconds: 15,
 								PeriodSeconds:       20,
-								TimeoutSeconds:      10,
+								TimeoutSeconds:      5,
 								ProbeHandler: corev1.ProbeHandler{
 									HTTPGet: &corev1.HTTPGetAction{
 										Path: "/healthz",
@@ -202,7 +203,8 @@ func equalDeploymentSpec(existing, desired v1.DeploymentSpec, autoScalingEnabled
 			return false
 		}
 	}
-	return true
+
+	return reflect.DeepEqual(existing.Template.Spec.Containers[0].Resources, desired.Template.Spec.Containers[0].Resources)
 }
 func restartDeployment(r client.Client, ctx context.Context, req ctrl.Request, gateway *gomaprojv1beta1.Gateway) error {
 	logger := log.FromContext(ctx)
