@@ -100,7 +100,7 @@ func createUpdateDeployment(r GatewayReconciler, ctx context.Context, req ctrl.R
 								},
 							},
 							ReadinessProbe: &corev1.Probe{
-								InitialDelaySeconds: 5,
+								InitialDelaySeconds: 10,
 								PeriodSeconds:       10,
 								TimeoutSeconds:      5,
 								ProbeHandler: corev1.ProbeHandler{
@@ -111,7 +111,7 @@ func createUpdateDeployment(r GatewayReconciler, ctx context.Context, req ctrl.R
 								},
 							},
 							LivenessProbe: &corev1.Probe{
-								InitialDelaySeconds: 15,
+								InitialDelaySeconds: 10,
 								PeriodSeconds:       20,
 								TimeoutSeconds:      5,
 								ProbeHandler: corev1.ProbeHandler{
