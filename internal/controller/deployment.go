@@ -82,16 +82,15 @@ func createUpdateDeployment(r GatewayReconciler, ctx context.Context, req ctrl.R
 						"belongs-to": BelongsTo,
 						"managed-by": gateway.Name,
 					},
-					Annotations: map[string]string{
-						"updated-at": time.Now().Format(time.RFC3339),
-					},
 				},
 				Spec: corev1.PodSpec{
-					Affinity: gateway.Spec.Affinity,
+					Affinity:         gateway.Spec.Affinity,
+					ImagePullSecrets: gateway.Spec.ImagePullSecrets,
 					Containers: []corev1.Container{
 						{
-							Name:            "gateway",
-							Image:           imageName,
+							Name:  "gateway",
+							Image: imageName,
+
 							ImagePullPolicy: corev1.PullIfNotPresent,
 							Command:         []string{"/usr/local/bin/goma", "server"},
 							Ports: []corev1.ContainerPort{
@@ -102,7 +101,7 @@ func createUpdateDeployment(r GatewayReconciler, ctx context.Context, req ctrl.R
 							ReadinessProbe: &corev1.Probe{
 								InitialDelaySeconds: 10,
 								PeriodSeconds:       10,
-								TimeoutSeconds:      5,
+								TimeoutSeconds:      10,
 								ProbeHandler: corev1.ProbeHandler{
 									HTTPGet: &corev1.HTTPGetAction{
 										Path: "/readyz",
@@ -112,8 +111,8 @@ func createUpdateDeployment(r GatewayReconciler, ctx context.Context, req ctrl.R
 							},
 							LivenessProbe: &corev1.Probe{
 								InitialDelaySeconds: 15,
-								PeriodSeconds:       10,
-								TimeoutSeconds:      5,
+								PeriodSeconds:       20,
+								TimeoutSeconds:      10,
 								ProbeHandler: corev1.ProbeHandler{
 									HTTPGet: &corev1.HTTPGetAction{
 										Path: "/healthz",

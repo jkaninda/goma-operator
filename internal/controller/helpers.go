@@ -3,6 +3,7 @@ package controller
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"github.com/jinzhu/copier"
 	"k8s.io/apimachinery/pkg/runtime"
 	"reflect"
@@ -99,20 +100,20 @@ func updateGatewayConfig(r RouteReconciler, ctx context.Context, req ctrl.Reques
 	var middlewareNames []string
 	// List ConfigMaps in the namespace with the matching label
 	var routes gomaprojv1beta1.RouteList
-	if err := r.List(ctx, &routes, labelSelector, client.InNamespace(req.Namespace)); err != nil {
+	if err = r.List(ctx, &routes, labelSelector, client.InNamespace(req.Namespace)); err != nil {
 		logger.Error(err, "Failed to list Routes")
 		return false, err
 	}
 	var middlewares gomaprojv1beta1.MiddlewareList
-	if err := r.List(ctx, &middlewares, labelSelector, client.InNamespace(req.Namespace)); err != nil {
+	if err = r.List(ctx, &middlewares, labelSelector, client.InNamespace(req.Namespace)); err != nil {
 		logger.Error(err, "Failed to list Middlewares")
 		return false, err
 	}
 	for _, route := range routes.Items {
-		logger.Info("Found Route", "Name", route.Name)
 		if route.Spec.Gateway == gateway.Name && route.DeletionTimestamp == nil {
+			logger.Info(fmt.Sprintf("Attaching route: %s to Gateway: %s", route.Name, gateway.Name))
 			rt := Route{}
-			err := copier.Copy(&rt, &route.Spec)
+			err = copier.Copy(&rt, &route.Spec)
 			if err != nil {
 				logger.Error(err, "Failed to deep copy Route", "Name", route.Name)
 				return false, err
@@ -213,7 +214,8 @@ func mapMid(middleware gomaprojv1beta1.Middleware) *Middleware {
 		strings.ToLower(RateLimit): &RateLimitRuleMiddleware{},
 		accessPolicy:               &AccessPolicyRuleMiddleware{},
 		addPrefix:                  &AddPrefixRuleMiddleware{},
-		redirectRegex:              &RedirectRegexRuleMiddleware{},
+		redirectRegex:              &RewriteRegexRuleMiddleware{},
+		rewriteRegex:               &RewriteRegexRuleMiddleware{},
 		forwardAuth:                &ForwardAuthRuleMiddleware{},
 	}
 

@@ -4,7 +4,6 @@ const (
 	AppImageName         = "jkaninda/goma-gateway"
 	ConfigPath           = "/etc/goma"
 	CertsPath            = "/etc/goma/certs"
-	RateLimit            = "rateLimit"
 	BelongsTo            = "goma-gateway"
 	GatewayConfigVersion = "1.0"
 	FinalizerName        = "gomaproj.github.io/resources.finalizer"
@@ -21,8 +20,9 @@ const (
 	OAuth            = "oauth"  // OAuth authentication middlewares
 	accessPolicy     = "accessPolicy"
 	addPrefix        = "addPrefix"
-	rateLimit        = "rateLimit"
+	RateLimit        = "rateLimit"
 	redirectRegex    = "redirectRegex"
+	rewriteRegex     = "rewriteRegex"
 	forwardAuth      = "forwardAuth"
 )
 

@@ -103,7 +103,7 @@ type BasicRuleMiddleware struct {
 type AddPrefixRuleMiddleware struct {
 	Prefix string `yaml:"prefix" json:"prefix"`
 }
-type RedirectRegexRuleMiddleware struct {
+type RewriteRegexRuleMiddleware struct {
 	Pattern     string `yaml:"pattern" json:"pattern"`
 	Replacement string `yaml:"replacement" json:"replacement"`
 }

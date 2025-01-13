@@ -83,6 +83,7 @@ func (r *GatewayReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		}
 	} else {
 		if controllerutil.ContainsFinalizer(gateway, FinalizerName) {
+			logger.Info("Finalizing Gateway", "Name", gateway.Name)
 			// Once finalization is done, remove the finalizer
 			if err := r.finalize(ctx, gateway); err != nil {
 				return ctrl.Result{}, err
@@ -97,6 +98,9 @@ func (r *GatewayReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		return ctrl.Result{}, nil
 	}
 
+	if gateway.Spec.ImageName != "" {
+		imageName = gateway.Spec.ImageName
+	}
 	if gateway.Spec.GatewayVersion != "" {
 		imageName = fmt.Sprintf("%s:%s", AppImageName, gateway.Spec.GatewayVersion)
 	}
