@@ -6,6 +6,7 @@ import (
 	autoscalingv2 "k8s.io/api/autoscaling/v2"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+	"reflect"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
@@ -82,7 +83,7 @@ func createHpa(r GatewayReconciler, ctx context.Context, req ctrl.Request, gatew
 	} else {
 		logger.Info("HorizontalPodAutoscaler already exists", "HorizontalPodAutoscaler.Name", hpa.Name)
 		// Update the Deployment if the spec has changed
-		if !equalHpaSpec(existHpa, *hpa) {
+		if !reflect.DeepEqual(existHpa.Spec, hpa.Spec) {
 			existHpa.Spec = hpa.Spec
 			if err = r.Update(ctx, &existHpa); err != nil {
 				logger.Error(err, "Failed to update Deployment")
@@ -92,21 +93,4 @@ func createHpa(r GatewayReconciler, ctx context.Context, req ctrl.Request, gatew
 		}
 	}
 	return nil
-}
-
-// Helper function to compare Deployment specs
-func equalHpaSpec(existing, desired autoscalingv2.HorizontalPodAutoscaler) bool {
-	if *existing.Spec.MinReplicas != *desired.Spec.MinReplicas {
-		return false
-	}
-	if existing.Spec.MaxReplicas != desired.Spec.MaxReplicas {
-		return false
-	}
-	if *existing.Spec.Metrics[0].Resource.Target.AverageUtilization != *desired.Spec.Metrics[0].Resource.Target.AverageUtilization {
-		return false
-	}
-	if *existing.Spec.Metrics[1].Resource.Target.AverageUtilization != *desired.Spec.Metrics[1].Resource.Target.AverageUtilization {
-		return false
-	}
-	return true
 }

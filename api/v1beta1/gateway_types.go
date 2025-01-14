@@ -23,11 +23,15 @@ import (
 
 // GatewaySpec defines the desired configuration and state of the Gateway deployment.
 type GatewaySpec struct {
-	// GatewayVersion specifies the version of the Goma Gateway image to use.
+	// ImageName specifies the image of the Goma Gateway to use.
 	// This value is used to pull the desired image for the Goma Gateway service.
-	// Example: "v0.1.4"
+	// Default: jkaninda/goma-gateway:latest
+	ImageName string `json:"imageName,omitempty"` // The version tag of the Goma Gateway image
+	// ImagePullSecrets is an optional list of references to secrets in the same namespace to use for pulling any of the images used by this PodSpec.
+	ImagePullSecrets []v1.LocalObjectReference `json:"imagePullSecrets,omitempty" patchStrategy:"merge" patchMergeKey:"name" protobuf:"bytes,15,rep,name=imagePullSecrets"`
+	// Deprecated,
+	// Please use ImageName instead
 	GatewayVersion string `json:"gatewayVersion,omitempty"` // The version tag of the Goma Gateway image
-
 	// Server contains the configuration for the Gateway server.
 	// It includes settings related to the server such as port, protocol, and other gateway-related configurations.
 	Server Server `json:"server,omitempty"` // Gateway server configuration

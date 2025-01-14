@@ -49,9 +49,7 @@ func gatewayConfig(r GatewayReconciler, ctx context.Context, req ctrl.Request, g
 		return *gomaConfig
 	}
 	for _, route := range routes.Items {
-		logger.Info("Found Route", "Name", route.Name)
 		if route.Spec.Gateway == gateway.Name && route.DeletionTimestamp == nil {
-			logger.Info("Found Route", "Name", route.Name)
 			rt := Route{}
 			err := copier.Copy(&rt, &route.Spec)
 			if err != nil {
@@ -64,21 +62,18 @@ func gatewayConfig(r GatewayReconciler, ctx context.Context, req ctrl.Request, g
 		}
 	}
 	for _, mid := range middlewares.Items {
-		middleware := *mapMid(mid)
-		logger.Info("Adding Middleware", "Name", middleware.Name)
-		if slices.Contains(middlewareNames, middleware.Name) {
-			gomaConfig.Middlewares = append(gomaConfig.Middlewares, middleware)
+		if mid.DeletionTimestamp == nil {
+			middleware := *mapMid(mid)
+			if slices.Contains(middlewareNames, middleware.Name) {
+				gomaConfig.Middlewares = append(gomaConfig.Middlewares, middleware)
+			}
 		}
 
 	}
-	// Sort routes
-	sort.Slice(gomaConfig.Gateway.Routes, func(i, j int) bool {
-		return len(gomaConfig.Gateway.Routes[i].Name) < len(gomaConfig.Gateway.Routes[j].Name)
-	})
-	// Sort Middlewares
-	sort.Slice(gomaConfig.Middlewares, func(i, j int) bool {
-		return len(gomaConfig.Middlewares[i].Name) < len(gomaConfig.Middlewares[j].Name)
-	})
+	// Sort routes by name
+	sort.Sort(RouteByName(gomaConfig.Gateway.Routes))
+	// Sort middlewares by name
+	sort.Sort(MiddlewareByName(gomaConfig.Middlewares))
 
 	return *gomaConfig
 }
@@ -99,20 +94,19 @@ func updateGatewayConfig(r RouteReconciler, ctx context.Context, req ctrl.Reques
 	var middlewareNames []string
 	// List ConfigMaps in the namespace with the matching label
 	var routes gomaprojv1beta1.RouteList
-	if err := r.List(ctx, &routes, labelSelector, client.InNamespace(req.Namespace)); err != nil {
+	if err = r.List(ctx, &routes, labelSelector, client.InNamespace(req.Namespace)); err != nil {
 		logger.Error(err, "Failed to list Routes")
 		return false, err
 	}
 	var middlewares gomaprojv1beta1.MiddlewareList
-	if err := r.List(ctx, &middlewares, labelSelector, client.InNamespace(req.Namespace)); err != nil {
+	if err = r.List(ctx, &middlewares, labelSelector, client.InNamespace(req.Namespace)); err != nil {
 		logger.Error(err, "Failed to list Middlewares")
 		return false, err
 	}
 	for _, route := range routes.Items {
-		logger.Info("Found Route", "Name", route.Name)
 		if route.Spec.Gateway == gateway.Name && route.DeletionTimestamp == nil {
 			rt := Route{}
-			err := copier.Copy(&rt, &route.Spec)
+			err = copier.Copy(&rt, &route.Spec)
 			if err != nil {
 				logger.Error(err, "Failed to deep copy Route", "Name", route.Name)
 				return false, err
@@ -124,21 +118,18 @@ func updateGatewayConfig(r RouteReconciler, ctx context.Context, req ctrl.Reques
 		}
 	}
 	for _, mid := range middlewares.Items {
-		middleware := *mapMid(mid)
-		logger.Info("Adding Middleware", "Name", middleware.Name)
-		if slices.Contains(middlewareNames, middleware.Name) {
-			gomaConfig.Middlewares = append(gomaConfig.Middlewares, middleware)
+		if mid.DeletionTimestamp == nil {
+			middleware := *mapMid(mid)
+			if slices.Contains(middlewareNames, middleware.Name) {
+				gomaConfig.Middlewares = append(gomaConfig.Middlewares, middleware)
+			}
 		}
 
 	}
-	// Sort routes
-	sort.Slice(gomaConfig.Gateway.Routes, func(i, j int) bool {
-		return len(gomaConfig.Gateway.Routes[i].Name) < len(gomaConfig.Gateway.Routes[j].Name)
-	})
-	// Sort Middlewares
-	sort.Slice(gomaConfig.Middlewares, func(i, j int) bool {
-		return len(gomaConfig.Middlewares[i].Name) < len(gomaConfig.Middlewares[j].Name)
-	})
+	// Sort routes by name
+	sort.Sort(RouteByName(gomaConfig.Gateway.Routes))
+	// Sort middlewares by name
+	sort.Sort(MiddlewareByName(gomaConfig.Middlewares))
 
 	yamlContent, err := yaml.Marshal(&gomaConfig)
 	if err != nil {
@@ -191,6 +182,7 @@ func updateGatewayConfig(r RouteReconciler, ctx context.Context, req ctrl.Reques
 			return true, nil
 
 		}
+
 	}
 	return false, nil
 
@@ -213,7 +205,8 @@ func mapMid(middleware gomaprojv1beta1.Middleware) *Middleware {
 		strings.ToLower(RateLimit): &RateLimitRuleMiddleware{},
 		accessPolicy:               &AccessPolicyRuleMiddleware{},
 		addPrefix:                  &AddPrefixRuleMiddleware{},
-		redirectRegex:              &RedirectRegexRuleMiddleware{},
+		redirectRegex:              &RewriteRegexRuleMiddleware{},
+		rewriteRegex:               &RewriteRegexRuleMiddleware{},
 		forwardAuth:                &ForwardAuthRuleMiddleware{},
 	}
 

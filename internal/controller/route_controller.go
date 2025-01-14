@@ -60,14 +60,14 @@ func (r *RouteReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		logger.Error(err, "Unable to fetch CustomResource")
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
-	var gateway gomaprojv1beta1.Gateway
-	if err := r.Get(ctx, types.NamespacedName{Name: route.Spec.Gateway, Namespace: route.Namespace}, &gateway); err != nil {
+	gateway := &gomaprojv1beta1.Gateway{}
+	if err := r.Get(ctx, types.NamespacedName{Name: route.Spec.Gateway, Namespace: route.Namespace}, gateway); err != nil {
 		logger.Error(err, "Failed to fetch Gateway")
 		return ctrl.Result{}, err
 	}
 
 	// Handle finalizer logic
-	if route.ObjectMeta.DeletionTimestamp.IsZero() {
+	if route.DeletionTimestamp == nil {
 		// Object is not being deleted: ensure the finalizer is added
 		if !controllerutil.ContainsFinalizer(route, FinalizerName) {
 			controllerutil.AddFinalizer(route, FinalizerName)
@@ -78,19 +78,21 @@ func (r *RouteReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 	} else {
 		// Object is being deleted: handle finalization logic
 		if controllerutil.ContainsFinalizer(route, FinalizerName) {
+			logger.Info("Finalizing Route", "Name", route.Name)
 			// Execute finalization steps
-			completed, err := updateGatewayConfig(*r, ctx, req, gateway)
+			completed, err := updateGatewayConfig(*r, ctx, req, *gateway)
 			if err != nil {
 				return ctrl.Result{}, fmt.Errorf("failed to update gateway config: %w", err)
 			}
 			if completed {
-				if err := restartDeployment(r.Client, ctx, req, &gateway); err != nil {
+				logger.Info("ConfigMap changed, updating ConfigMap")
+				if err = restartDeployment(r.Client, ctx, req, gateway); err != nil {
 					return ctrl.Result{}, fmt.Errorf("failed to restart deployment: %w", err)
 				}
 			}
 			// Remove the finalizer after successful cleanup
 			controllerutil.RemoveFinalizer(route, FinalizerName)
-			if err := r.Update(ctx, route); err != nil {
+			if err = r.Update(ctx, route); err != nil {
 				return ctrl.Result{}, fmt.Errorf("failed to remove finalizer: %w", err)
 			}
 		}
@@ -98,12 +100,13 @@ func (r *RouteReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		return ctrl.Result{}, nil
 	}
 
-	ok, err := updateGatewayConfig(*r, ctx, req, gateway)
+	ok, err := updateGatewayConfig(*r, ctx, req, *gateway)
 	if err != nil {
 		return ctrl.Result{}, err
 	}
 	if ok {
-		if err = restartDeployment(r.Client, ctx, req, &gateway); err != nil {
+		logger.Info("Restarting deployment...")
+		if err = restartDeployment(r.Client, ctx, req, gateway); err != nil {
 			logger.Error(err, "Failed to restart Deployment")
 			return ctrl.Result{}, err
 

@@ -3,6 +3,7 @@ package controller
 import (
 	"context"
 	"fmt"
+	"reflect"
 	"time"
 
 	gomaprojv1beta1 "github.com/jkaninda/goma-operator/api/v1beta1"
@@ -82,16 +83,15 @@ func createUpdateDeployment(r GatewayReconciler, ctx context.Context, req ctrl.R
 						"belongs-to": BelongsTo,
 						"managed-by": gateway.Name,
 					},
-					Annotations: map[string]string{
-						"updated-at": time.Now().Format(time.RFC3339),
-					},
 				},
 				Spec: corev1.PodSpec{
-					Affinity: gateway.Spec.Affinity,
+					Affinity:         gateway.Spec.Affinity,
+					ImagePullSecrets: gateway.Spec.ImagePullSecrets,
 					Containers: []corev1.Container{
 						{
-							Name:            "gateway",
-							Image:           imageName,
+							Name:  "gateway",
+							Image: imageName,
+
 							ImagePullPolicy: corev1.PullIfNotPresent,
 							Command:         []string{"/usr/local/bin/goma", "server"},
 							Ports: []corev1.ContainerPort{
@@ -111,8 +111,8 @@ func createUpdateDeployment(r GatewayReconciler, ctx context.Context, req ctrl.R
 								},
 							},
 							LivenessProbe: &corev1.Probe{
-								InitialDelaySeconds: 15,
-								PeriodSeconds:       10,
+								InitialDelaySeconds: 10,
+								PeriodSeconds:       20,
 								TimeoutSeconds:      5,
 								ProbeHandler: corev1.ProbeHandler{
 									HTTPGet: &corev1.HTTPGetAction{
@@ -203,7 +203,8 @@ func equalDeploymentSpec(existing, desired v1.DeploymentSpec, autoScalingEnabled
 			return false
 		}
 	}
-	return true
+
+	return reflect.DeepEqual(existing.Template.Spec.Containers[0].Resources, desired.Template.Spec.Containers[0].Resources)
 }
 func restartDeployment(r client.Client, ctx context.Context, req ctrl.Request, gateway *gomaprojv1beta1.Gateway) error {
 	logger := log.FromContext(ctx)

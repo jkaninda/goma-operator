@@ -992,10 +992,36 @@ spec:
                 type: object
               gatewayVersion:
                 description: |-
-                  GatewayVersion specifies the version of the Goma Gateway image to use.
-                  This value is used to pull the desired image for the Goma Gateway service.
-                  Example: "v0.1.4"
+                  Deprecated,
+                  Please use ImageName instead
                 type: string
+              imageName:
+                description: |-
+                  ImageName specifies the image of the Goma Gateway to use.
+                  This value is used to pull the desired image for the Goma Gateway service.
+                  Default: jkaninda/goma-gateway:latest
+                type: string
+              imagePullSecrets:
+                description: ImagePullSecrets is an optional list of references to
+                  secrets in the same namespace to use for pulling any of the images
+                  used by this PodSpec.
+                items:
+                  description: |-
+                    LocalObjectReference contains enough information to let you locate the
+                    referenced object inside the same namespace.
+                  properties:
+                    name:
+                      default: ""
+                      description: |-
+                        Name of the referent.
+                        This field is effectively required, but due to backwards compatibility is
+                        allowed to be empty. Instances of this type with an empty value here are
+                        almost certainly wrong.
+                        More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                      type: string
+                  type: object
+                  x-kubernetes-map-type: atomic
+                type: array
               replicaCount:
                 description: |-
                   ReplicaCount defines the number of replicas for the Gateway deployment.
@@ -1892,7 +1918,7 @@ spec:
         - --health-probe-bind-address=:8081
         command:
         - /manager
-        image: jkaninda/goma-operator:0.1.1
+        image: jkaninda/goma-operator:0.1.2
         livenessProbe:
           httpGet:
             path: /healthz
@@ -1909,10 +1935,10 @@ spec:
         resources:
           limits:
             cpu: 500m
-            memory: 128Mi
+            memory: 512Mi
           requests:
-            cpu: 10m
-            memory: 64Mi
+            cpu: 50m
+            memory: 128Mi
         securityContext:
           allowPrivilegeEscalation: false
           capabilities:

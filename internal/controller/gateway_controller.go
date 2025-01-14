@@ -83,6 +83,7 @@ func (r *GatewayReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		}
 	} else {
 		if controllerutil.ContainsFinalizer(gateway, FinalizerName) {
+			logger.Info("Finalizing Gateway", "Name", gateway.Name)
 			// Once finalization is done, remove the finalizer
 			if err := r.finalize(ctx, gateway); err != nil {
 				return ctrl.Result{}, err
@@ -97,6 +98,9 @@ func (r *GatewayReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		return ctrl.Result{}, nil
 	}
 
+	if gateway.Spec.ImageName != "" {
+		imageName = gateway.Spec.ImageName
+	}
 	if gateway.Spec.GatewayVersion != "" {
 		imageName = fmt.Sprintf("%s:%s", AppImageName, gateway.Spec.GatewayVersion)
 	}
@@ -149,7 +153,7 @@ func (r *GatewayReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		if !reflect.DeepEqual(existingConfigMap.Data, configMap.Data) {
 			logger.Info("Updating ConfigMap...", "ConfigMap.Name", configMap.Name)
 			existingConfigMap.Data = configMap.Data
-			if err := r.Update(ctx, existingConfigMap); err != nil {
+			if err = r.Update(ctx, existingConfigMap); err != nil {
 				logger.Error(err, "Failed to update ConfigMap")
 				addCondition(&gateway.Status, "ConfigMapReady", metav1.ConditionFalse, "ConfigMapReady", "Failed to update ConfigMap for Gateway")
 				return ctrl.Result{}, err
