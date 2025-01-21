@@ -42,7 +42,18 @@ spec:
               backends:
                 description: Backends specifies a list of backend URLs for load balancing.
                 items:
-                  type: string
+                  description: Backend defines backend server to route traffic to
+                  properties:
+                    endpoint:
+                      description: Endpoint defines the endpoint of the backend
+                      type: string
+                    weight:
+                      description: Weight defines Weight for weighted algorithm, it
+                        optional
+                      type: integer
+                  required:
+                  - endpoint
+                  type: object
                 type: array
               blockCommonExploits:
                 description: BlockCommonExploits enables or disables blocking common
@@ -67,11 +78,6 @@ spec:
                 description: Destination defines the backend URL to which requests
                   will be proxied.
                 type: string
-              disableHostFording:
-                description: |-
-                  DisableHostFording disables host forwarding for this route.
-                  Deprecated: Use DisableHostForwarding instead.
-                type: boolean
               disableHostForwarding:
                 description: DisableHostForwarding disables forwarding the host header
                   to the backend.
@@ -106,8 +112,6 @@ spec:
                           type: integer
                       type: object
                     type: array
-                required:
-                - enabled
                 type: object
               gateway:
                 description: Gateway specifies the name of the Gateway resource associated
@@ -154,10 +158,6 @@ spec:
                 type: string
               priority:
                 description: Route order priority
-                type: integer
-              rateLimit:
-                description: RateLimit defines the maximum number of requests allowed
-                  per minute for this route.
                 type: integer
               rewrite:
                 description: Rewrite specifies the new path to rewrite the incoming

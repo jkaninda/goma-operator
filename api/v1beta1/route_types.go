@@ -40,20 +40,15 @@ type RouteSpec struct {
 	// Methods specifies the HTTP methods allowed for this route (e.g., GET, POST, PUT).
 	Methods []string `json:"methods,omitempty" yaml:"methods"`
 	// Destination defines the backend URL to which requests will be proxied.
-	Destination string `json:"destination,omitempty" yaml:"destination"`
+	Destination string `json:"destination,omitempty" yaml:"destination,omitempty"`
 	// Backends specifies a list of backend URLs for load balancing.
-	Backends []string `json:"backends,omitempty" yaml:"backends"`
+	Backends Backends `yaml:"backends,omitempty" json:"backends,omitempty"`
 	// InsecureSkipVerify allows skipping TLS certificate verification for backend connections.
 	InsecureSkipVerify bool `json:"insecureSkipVerify,omitempty" yaml:"insecureSkipVerify"`
 	// HealthCheck defines the settings for backend health checks.
 	HealthCheck RouteHealthCheck `json:"healthCheck,omitempty" yaml:"healthCheck,omitempty"`
 	// Cors specifies the CORS (Cross-Origin Resource Sharing) configuration for the route.
 	Cors Cors `json:"cors,omitempty" yaml:"cors"`
-	// RateLimit defines the maximum number of requests allowed per minute for this route.
-	RateLimit int `json:"rateLimit,omitempty" yaml:"rateLimit"` // Deprecated: Use RateLimit middleware instead.
-	// DisableHostFording disables host forwarding for this route.
-	// Deprecated: Use DisableHostForwarding instead.
-	DisableHostFording bool `json:"disableHostFording,omitempty" yaml:"disableHostFording"`
 	// DisableHostForwarding disables forwarding the host header to the backend.
 	DisableHostForwarding bool `json:"disableHostForwarding,omitempty" yaml:"disableHostForwarding"`
 	// ErrorInterceptor defines the configuration for handling backend error interception.

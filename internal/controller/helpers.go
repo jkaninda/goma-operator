@@ -208,6 +208,9 @@ func mapMid(middleware gomaprojv1beta1.Middleware) *Middleware {
 		redirectRegex:              &RewriteRegexRuleMiddleware{},
 		rewriteRegex:               &RewriteRegexRuleMiddleware{},
 		forwardAuth:                &ForwardAuthRuleMiddleware{},
+		httpCache:                  &httpCacheRule{},
+		AccessMiddleware:           &AccessRuleMiddleware{},
+		redirectScheme:             &RedirectSchemeRuleMiddleware{},
 	}
 
 	rule, exists := ruleMapping[middleware.Spec.Type]

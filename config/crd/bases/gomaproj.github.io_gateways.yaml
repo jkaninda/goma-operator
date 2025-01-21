@@ -1145,8 +1145,6 @@ spec:
                               type: integer
                           type: object
                         type: array
-                    required:
-                    - enabled
                     type: object
                   idleTimeout:
                     description: IdleTimeout defines the proxy's idle timeout in seconds.
