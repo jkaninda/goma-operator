@@ -5,12 +5,12 @@ import gomaprojv1beta1 "github.com/jkaninda/goma-operator/api/v1beta1"
 // Gateway contains Goma Proxy Gateway's configs
 type Gateway struct {
 	// TlsCertFile  SSL Certificate file
-	TlsCertFile string `yaml:"tlsCertFile"`
+	TlsCertFile string `yaml:"tlsCertFile,omitempty"`
 	// TlsKeyFile SSL Private key  file
-	TlsKeyFile string `yaml:"tlsKeyFile"`
+	TlsKeyFile string `yaml:"tlsKeyFile,omitempty"`
 	TLS        TLS    `yaml:"tls,omitempty"`
 	// Redis contains redis database details
-	Redis gomaprojv1beta1.Redis `yaml:"redis"`
+	Redis gomaprojv1beta1.Redis `yaml:"redis,omitempty"`
 	// WriteTimeout defines proxy write timeout
 	WriteTimeout int `yaml:"writeTimeout"`
 	// ReadTimeout defines proxy read timeout
@@ -20,21 +20,20 @@ type Gateway struct {
 	LogLevel    string               `yaml:"logLevel"`
 	Cors        gomaprojv1beta1.Cors `yaml:"cors"`
 	// DisableHealthCheckStatus enable and disable routes health check
-	DisableHealthCheckStatus bool `yaml:"disableHealthCheckStatus"`
+	DisableHealthCheckStatus bool `yaml:"disableHealthCheckStatus,omitempty"`
 	// DisableRouteHealthCheckError allows enabling and disabling backend healthcheck errors
-	DisableRouteHealthCheckError bool `yaml:"disableRouteHealthCheckError"`
+	DisableRouteHealthCheckError bool `yaml:"disableRouteHealthCheckError,omitempty"`
 	// Disable allows enabling and disabling displaying routes on start
-	DisableDisplayRouteOnStart bool `yaml:"disableDisplayRouteOnStart"`
+	DisableDisplayRouteOnStart bool `yaml:"disableDisplayRouteOnStart,omitempty"`
 	// DisableKeepAlive allows enabling and disabling KeepALive server
-	DisableKeepAlive bool `yaml:"disableKeepAlive"`
-	EnableMetrics    bool `yaml:"enableMetrics"`
+	DisableKeepAlive bool `yaml:"disableKeepAlive,omitempty"`
+	EnableMetrics    bool `yaml:"enableMetrics,omitempty"`
 	// InterceptErrors holds the status codes to intercept the error from backend
-	InterceptErrors       []int `yaml:"interceptErrors,omitempty"` // Deprecated
-	DisableHostForwarding bool  `yaml:"disableHostForwarding"`
-	EnableStrictSlash     bool  `json:"enableStrictSlash,omitempty" yaml:"enableStrictSlash,omitempty"`
+	InterceptErrors   []int `yaml:"interceptErrors,omitempty"` // Deprecated
+	EnableStrictSlash bool  `json:"enableStrictSlash,omitempty" yaml:"enableStrictSlash,omitempty"`
 	//  ErrorInterceptor handles backend error interceptor
 	ErrorInterceptor gomaprojv1beta1.RouteErrorInterceptor `yaml:"errorInterceptor,omitempty" json:"errorInterceptor,omitempty"`
-	Routes           []Route                               `json:"routes,omitempty" yaml:"routes,omitempty"`
+	Routes           []Route                               `json:"routes,omitempty" yaml:"routes"`
 }
 type Route struct {
 	// Path defines route path
@@ -182,9 +181,12 @@ type RedirectSchemeRuleMiddleware struct {
 type AccessRuleMiddleware struct {
 	StatusCode int `yaml:"statusCode,omitempty"` // HTTP Response code
 }
+
 type TLS struct {
-	Keys []struct {
-		Cert string `yaml:"cert" json:"cert"`
-		Key  string `yaml:"key" json:"key"`
-	} `yaml:"keys,omitempty" json:"keys,omitempty"`
+	// Keys contains the list of TLS keys
+	Keys []Key `yaml:"keys,omitempty" json:"keys,omitempty"`
+}
+type Key struct {
+	Cert string `yaml:"cert" json:"cert"`
+	Key  string `yaml:"key" json:"key"`
 }

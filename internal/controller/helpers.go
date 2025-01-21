@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"github.com/jinzhu/copier"
 	"k8s.io/apimachinery/pkg/runtime"
+	"path/filepath"
 	"reflect"
 	"slices"
 	"sort"
@@ -29,10 +30,27 @@ func gatewayConfig(r GatewayReconciler, ctx context.Context, req ctrl.Request, g
 	if err != nil {
 		logger.Error(err, "failed to copy gateway spec")
 	}
+	gomaConfig.Gateway.TLS.Keys = []Key{}
 	// attach cert files
 	if len(gateway.Spec.Server.TlsSecretName) != 0 {
-		gomaConfig.Gateway.TlsCertFile = TLSCertFile
-		gomaConfig.Gateway.TlsKeyFile = TLSKeyFile
+		key := Key{
+			Cert: filepath.Join(CertsPath, gateway.Spec.Server.TlsSecretName+"/tls.crt"),
+			Key:  filepath.Join(CertsPath, gateway.Spec.Server.TlsSecretName+"/tls.key"),
+		}
+		gomaConfig.Gateway.TLS.Keys = append(gomaConfig.Gateway.TLS.Keys, key)
+
+	}
+	if gateway.Spec.Server.TLS != nil && len(gateway.Spec.Server.TLS.Keys) != 0 {
+		for _, tls := range gateway.Spec.Server.TLS.Keys {
+			if tls.TlsSecretName != "" {
+				key := Key{
+					Cert: filepath.Join(CertsPath, tls.TlsSecretName+"/tls.crt"),
+					Key:  filepath.Join(CertsPath, tls.TlsSecretName+"/tls.key"),
+				}
+				gomaConfig.Gateway.TLS.Keys = append(gomaConfig.Gateway.TLS.Keys, key)
+			}
+		}
+
 	}
 
 	labelSelector := client.MatchingLabels{}
@@ -85,10 +103,28 @@ func updateGatewayConfig(r RouteReconciler, ctx context.Context, req ctrl.Reques
 	if err != nil {
 		logger.Error(err, "failed to copy gateway spec")
 	}
+	// Clear the keys
+	gomaConfig.Gateway.TLS.Keys = []Key{}
 	// attach cert files
 	if len(gateway.Spec.Server.TlsSecretName) != 0 {
-		gomaConfig.Gateway.TlsCertFile = TLSCertFile
-		gomaConfig.Gateway.TlsKeyFile = TLSKeyFile
+		key := Key{
+			Cert: filepath.Join(CertsPath, gateway.Spec.Server.TlsSecretName+"/tls.crt"),
+			Key:  filepath.Join(CertsPath, gateway.Spec.Server.TlsSecretName+"/tls.key"),
+		}
+		gomaConfig.Gateway.TLS.Keys = append(gomaConfig.Gateway.TLS.Keys, key)
+
+	}
+	if gateway.Spec.Server.TLS != nil && len(gateway.Spec.Server.TLS.Keys) != 0 {
+		for _, tls := range gateway.Spec.Server.TLS.Keys {
+			if tls.TlsSecretName != "" {
+				key := Key{
+					Cert: filepath.Join(CertsPath, tls.TlsSecretName+"/tls.crt"),
+					Key:  filepath.Join(CertsPath, tls.TlsSecretName+"/tls.key"),
+				}
+				gomaConfig.Gateway.TLS.Keys = append(gomaConfig.Gateway.TLS.Keys, key)
+			}
+		}
+
 	}
 	labelSelector := client.MatchingLabels{}
 	var middlewareNames []string

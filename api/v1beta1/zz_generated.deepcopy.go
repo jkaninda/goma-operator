@@ -545,6 +545,11 @@ func (in *RouteStatus) DeepCopy() *RouteStatus {
 func (in *Server) DeepCopyInto(out *Server) {
 	*out = *in
 	out.Redis = in.Redis
+	if in.TLS != nil {
+		in, out := &in.TLS, &out.TLS
+		*out = new(TLS)
+		(*in).DeepCopyInto(*out)
+	}
 	in.Cors.DeepCopyInto(&out.Cors)
 	in.ErrorInterceptor.DeepCopyInto(&out.ErrorInterceptor)
 }

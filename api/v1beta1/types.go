@@ -37,10 +37,13 @@ type Server struct {
 	// LogLevel specifies the logging level for the proxy. Accepted values: "info", "debug", "trace", "off".
 	LogLevel string `json:"logLevel,omitempty" yaml:"logLevel,omitempty"`
 	// TlsSecretName specifies the name of the secret containing the TLS certificate and key.
+	// Deprecated: Use TLS instead.
 	TlsSecretName string `json:"tlsSecretName,omitempty" yaml:"tlsSecretName,omitempty"`
 
 	// Redis contains the configuration details for connecting to a Redis database.
 	Redis Redis `json:"redis,omitempty" yaml:"redis,omitempty"`
+	// TLS contains the TLS configuration for the proxy.
+	TLS *TLS `json:"tls,omitempty" yaml:"tls"`
 	// Cors holds the global CORS (Cross-Origin Resource Sharing) configuration for the proxy.
 	Cors Cors `json:"cors,omitempty" yaml:"cors,omitempty"`
 	// ErrorInterceptor defines the configuration for intercepting and handling backend errors.
@@ -84,6 +87,7 @@ type RouteError struct {
 }
 
 type TLS struct {
+	// Keys contains the list of TLS keys
 	Keys []Key `yaml:"keys,omitempty" json:"keys,omitempty"`
 }
 type Key struct {

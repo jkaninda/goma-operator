@@ -1167,9 +1167,24 @@ spec:
                       password:
                         type: string
                     type: object
+                  tls:
+                    description: TLS contains the TLS configuration for the proxy.
+                    properties:
+                      keys:
+                        description: Keys contains the list of TLS keys
+                        items:
+                          properties:
+                            tlsSecretName:
+                              type: string
+                          required:
+                          - tlsSecretName
+                          type: object
+                        type: array
+                    type: object
                   tlsSecretName:
-                    description: TlsSecretName specifies the name of the secret containing
-                      the TLS certificate and key.
+                    description: |-
+                      TlsSecretName specifies the name of the secret containing the TLS certificate and key.
+                      Deprecated: Use TLS instead.
                     type: string
                   writeTimeout:
                     description: WriteTimeout specifies the proxy's write timeout
