@@ -4,9 +4,11 @@ import gomaprojv1beta1 "github.com/jkaninda/goma-operator/api/v1beta1"
 
 // Gateway contains Goma Proxy Gateway's configs
 type Gateway struct {
-	// TlsCertFile  SSL Certificate file
+	// TlsCertFile SSL Certificate file
+	// Deprecated use TLS
 	TlsCertFile string `yaml:"tlsCertFile,omitempty"`
-	// TlsKeyFile SSL Private key  file
+	// TlsKeyFile SSL Private key file
+	// Deprecated use TLS
 	TlsKeyFile string `yaml:"tlsKeyFile,omitempty"`
 	TLS        TLS    `yaml:"tls,omitempty"`
 	// Redis contains redis database details
@@ -58,7 +60,7 @@ type Route struct {
 	// HealthCheck Defines the backend is health
 	HealthCheck gomaprojv1beta1.RouteHealthCheck `json:"healthCheck,omitempty" yaml:"healthCheck,omitempty"`
 	// Cors contains the route cors headers
-	Cors                  gomaprojv1beta1.Cors `json:"cors,omitempty" yaml:"cors"`
+	Cors                  gomaprojv1beta1.Cors `json:"cors,omitempty" yaml:"cors,omitempty"`
 	DisableHostForwarding bool                 `json:"disableHostForwarding,omitempty" yaml:"disableHostForwarding,omitempty"`
 	//  ErrorInterceptor handles backend error interceptor
 	ErrorInterceptor gomaprojv1beta1.RouteErrorInterceptor `yaml:"errorInterceptor,omitempty" json:"errorInterceptor,omitempty"`

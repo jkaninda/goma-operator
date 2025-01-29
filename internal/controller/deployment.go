@@ -121,6 +121,9 @@ func createUpdateDeployment(r GatewayReconciler, ctx context.Context, req ctrl.R
 								{
 									ContainerPort: 8080,
 								},
+								{
+									ContainerPort: 8443,
+								},
 							},
 							ReadinessProbe: &corev1.Probe{
 								InitialDelaySeconds: 10,

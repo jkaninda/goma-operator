@@ -1931,7 +1931,7 @@ spec:
         - --health-probe-bind-address=:8081
         command:
         - /manager
-        image: jkaninda/goma-operator:0.1.2
+        image: jkaninda/goma-operator:0.1.3
         livenessProbe:
           httpGet:
             path: /healthz
