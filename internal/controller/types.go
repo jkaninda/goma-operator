@@ -4,12 +4,15 @@ import gomaprojv1beta1 "github.com/jkaninda/goma-operator/api/v1beta1"
 
 // Gateway contains Goma Proxy Gateway's configs
 type Gateway struct {
-	// TlsCertFile  SSL Certificate file
-	TlsCertFile string `yaml:"tlsCertFile"`
-	// TlsKeyFile SSL Private key  file
-	TlsKeyFile string `yaml:"tlsKeyFile"`
+	// TlsCertFile SSL Certificate file
+	// Deprecated use TLS
+	TlsCertFile string `yaml:"tlsCertFile,omitempty"`
+	// TlsKeyFile SSL Private key file
+	// Deprecated use TLS
+	TlsKeyFile string `yaml:"tlsKeyFile,omitempty"`
+	TLS        TLS    `yaml:"tls,omitempty"`
 	// Redis contains redis database details
-	Redis gomaprojv1beta1.Redis `yaml:"redis"`
+	Redis gomaprojv1beta1.Redis `yaml:"redis,omitempty"`
 	// WriteTimeout defines proxy write timeout
 	WriteTimeout int `yaml:"writeTimeout"`
 	// ReadTimeout defines proxy read timeout
@@ -19,21 +22,20 @@ type Gateway struct {
 	LogLevel    string               `yaml:"logLevel"`
 	Cors        gomaprojv1beta1.Cors `yaml:"cors"`
 	// DisableHealthCheckStatus enable and disable routes health check
-	DisableHealthCheckStatus bool `yaml:"disableHealthCheckStatus"`
+	DisableHealthCheckStatus bool `yaml:"disableHealthCheckStatus,omitempty"`
 	// DisableRouteHealthCheckError allows enabling and disabling backend healthcheck errors
-	DisableRouteHealthCheckError bool `yaml:"disableRouteHealthCheckError"`
+	DisableRouteHealthCheckError bool `yaml:"disableRouteHealthCheckError,omitempty"`
 	// Disable allows enabling and disabling displaying routes on start
-	DisableDisplayRouteOnStart bool `yaml:"disableDisplayRouteOnStart"`
+	DisableDisplayRouteOnStart bool `yaml:"disableDisplayRouteOnStart,omitempty"`
 	// DisableKeepAlive allows enabling and disabling KeepALive server
-	DisableKeepAlive bool `yaml:"disableKeepAlive"`
-	EnableMetrics    bool `yaml:"enableMetrics"`
+	DisableKeepAlive bool `yaml:"disableKeepAlive,omitempty"`
+	EnableMetrics    bool `yaml:"enableMetrics,omitempty"`
 	// InterceptErrors holds the status codes to intercept the error from backend
-	InterceptErrors       []int `yaml:"interceptErrors,omitempty"` // Deprecated
-	DisableHostForwarding bool  `yaml:"disableHostForwarding"`
-	EnableStrictSlash     bool  `json:"enableStrictSlash,omitempty" yaml:"enableStrictSlash,omitempty"`
+	InterceptErrors   []int `yaml:"interceptErrors,omitempty"` // Deprecated
+	EnableStrictSlash bool  `json:"enableStrictSlash,omitempty" yaml:"enableStrictSlash,omitempty"`
 	//  ErrorInterceptor handles backend error interceptor
 	ErrorInterceptor gomaprojv1beta1.RouteErrorInterceptor `yaml:"errorInterceptor,omitempty" json:"errorInterceptor,omitempty"`
-	Routes           []Route                               `json:"routes,omitempty" yaml:"routes,omitempty"`
+	Routes           []Route                               `json:"routes,omitempty" yaml:"routes"`
 }
 type Route struct {
 	// Path defines route path
@@ -41,6 +43,7 @@ type Route struct {
 	// Name defines route name
 	Name     string `json:"name" yaml:"name"`
 	Disabled bool   `json:"disabled,omitempty" yaml:"disabled"`
+	TLS      TLS    `yaml:"tls,omitempty"`
 	// Route order priority
 	Priority int `yaml:"priority,omitempty" json:"priority,omitempty"`
 	// Hosts Domains/hosts based request routing
@@ -50,14 +53,14 @@ type Route struct {
 	// Methods allowed method
 	Methods []string `json:"methods,omitempty" yaml:"methods,omitempty"`
 	// Destination Defines backend URL
-	Destination        string   `json:"destination,omitempty" yaml:"destination,omitempty"`
-	Backends           []string `json:"backends,omitempty" yaml:"backends,omitempty"`
-	InsecureSkipVerify bool     `json:"insecureSkipVerify,omitempty" yaml:"insecureSkipVerify,omitempty"`
+	Destination string `json:"destination,omitempty" yaml:"destination,omitempty"`
+	// Backends specifies a list of backend URLs for load balancing.
+	Backends           gomaprojv1beta1.Backends `yaml:"backends,omitempty" json:"backends,omitempty"`
+	InsecureSkipVerify bool                     `json:"insecureSkipVerify,omitempty" yaml:"insecureSkipVerify,omitempty"`
 	// HealthCheck Defines the backend is health
 	HealthCheck gomaprojv1beta1.RouteHealthCheck `json:"healthCheck,omitempty" yaml:"healthCheck,omitempty"`
 	// Cors contains the route cors headers
-	Cors                  gomaprojv1beta1.Cors `json:"cors,omitempty" yaml:"cors"`
-	RateLimit             int                  `json:"rateLimit,omitempty" yaml:"rateLimit,omitempty"`
+	Cors                  gomaprojv1beta1.Cors `json:"cors,omitempty" yaml:"cors,omitempty"`
 	DisableHostForwarding bool                 `json:"disableHostForwarding,omitempty" yaml:"disableHostForwarding,omitempty"`
 	//  ErrorInterceptor handles backend error interceptor
 	ErrorInterceptor gomaprojv1beta1.RouteErrorInterceptor `yaml:"errorInterceptor,omitempty" json:"errorInterceptor,omitempty"`
@@ -79,10 +82,10 @@ type Middleware struct {
 	// Type contains authentication types
 	//
 	// basic, jwt, oauth, rateLimit, access
-	Type  string   `json:"type" yaml:"type"`   // Middleware type [basic, jwt, oauth, rateLimit, access]
-	Paths []string `json:"paths" yaml:"paths"` // Protected paths
+	Type  string   `json:"type" yaml:"type"`                       // Middleware type [basic, jwt, oauth, rateLimit, access]
+	Paths []string `json:"paths,omitempty" yaml:"paths,omitempty"` // Protected paths
 	// Rule contains route middleware rule
-	Rule interface{} `json:"rule" yaml:"rule"`
+	Rule interface{} `json:"rule,omitempty" yaml:"rule,omitempty"`
 }
 
 type Middlewares struct {
@@ -108,10 +111,11 @@ type RewriteRegexRuleMiddleware struct {
 	Replacement string `yaml:"replacement" json:"replacement"`
 }
 type JWTRuleMiddleware struct {
-	URL             string            `yaml:"url" json:"url"`
-	RequiredHeaders []string          `yaml:"requiredHeaders" json:"requiredHeaders"`
-	Headers         map[string]string `yaml:"headers" json:"headers"`
-	Params          map[string]string `yaml:"params" json:"params"`
+	Alg                  string `yaml:"alg,omitempty" json:"alg,omitempty"`
+	Secret               string `yaml:"secret,omitempty" json:"secret,omitempty"`
+	PublicKey            string `yaml:"publicKey,omitempty" json:"publicKey,omitempty"`
+	JwksUrl              string `yaml:"jwksUrl,omitempty" json:"jwksUrl,omitempty"`
+	ForwardAuthorization bool   `yaml:"forwardAuthorization,omitempty" json:"forwardAuthorization,omitempty"`
 }
 
 // AccessPolicyRuleMiddleware access policy
@@ -163,4 +167,28 @@ type ForwardAuthRuleMiddleware struct {
 	AddAuthCookiesToResponse    []string `yaml:"addAuthCookiesToResponse,omitempty" json:"addAuthCookiesToResponse,omitempty"`
 	AuthResponseHeaders         []string `yaml:"authResponseHeaders,omitempty" json:"authResponseHeaders,omitempty"`
 	AuthResponseHeadersAsParams []string `yaml:"authResponseHeadersAsParams,omitempty" json:"authResponseHeadersAsParams,omitempty"`
+}
+type httpCacheRule struct {
+	MaxTtl                   int64    `yaml:"maxTtl" json:"maxTtl"`
+	MaxStale                 int64    `yaml:"maxStale,omitempty" json:"maxStale,omitempty"`
+	DisableCacheStatusHeader bool     `yaml:"disableCacheStatusHeader,omitempty" json:"disableCacheStatusHeader,omitempty"`
+	ExcludedResponseCodes    []string `yaml:"excludedResponseCodes,omitempty" json:"excludedResponseCodes,omitempty"`
+	MemoryLimit              string   `yaml:"memoryLimit,omitempty" json:"memoryLimit,omitempty"`
+}
+type RedirectSchemeRuleMiddleware struct {
+	Scheme    string `yaml:"scheme" json:"scheme"`
+	Port      int64  `yaml:"port,omitempty" json:"port,omitempty"`
+	Permanent bool   `yaml:"permanent,omitempty" json:"permanent,omitempty"`
+}
+type AccessRuleMiddleware struct {
+	StatusCode int `yaml:"statusCode,omitempty"` // HTTP Response code
+}
+
+type TLS struct {
+	// Keys contains the list of TLS keys
+	Keys []Key `yaml:"keys,omitempty" json:"keys,omitempty"`
+}
+type Key struct {
+	Cert string `yaml:"cert" json:"cert"`
+	Key  string `yaml:"key" json:"key"`
 }

@@ -3,6 +3,7 @@ package controller
 import (
 	"context"
 	"fmt"
+	"path/filepath"
 	"reflect"
 	"time"
 
@@ -42,7 +43,7 @@ func createUpdateDeployment(r GatewayReconciler, ctx context.Context, req ctrl.R
 	})
 	if len(gateway.Spec.Server.TlsSecretName) != 0 {
 		volumes = append(volumes, corev1.Volume{
-			Name: "certs",
+			Name: gateway.Spec.Server.TlsSecretName,
 			VolumeSource: corev1.VolumeSource{
 				Secret: &corev1.SecretVolumeSource{
 					SecretName: gateway.Spec.Server.TlsSecretName,
@@ -50,15 +51,37 @@ func createUpdateDeployment(r GatewayReconciler, ctx context.Context, req ctrl.R
 			},
 		})
 		volumeMounts = append(volumeMounts, corev1.VolumeMount{
-			Name:      "certs",
+			Name:      gateway.Spec.Server.TlsSecretName,
 			ReadOnly:  true,
-			MountPath: CertsPath,
+			MountPath: filepath.Join(CertsPath, gateway.Spec.Server.TlsSecretName),
 		})
 
+	}
+	if gateway.Spec.Server.TLS != nil && len(gateway.Spec.Server.TLS.Keys) != 0 {
+		for _, tls := range gateway.Spec.Server.TLS.Keys {
+			if tls.TlsSecretName != "" {
+				volumes = append(volumes, corev1.Volume{
+					Name: tls.TlsSecretName,
+					VolumeSource: corev1.VolumeSource{
+						Secret: &corev1.SecretVolumeSource{
+							SecretName: tls.TlsSecretName,
+						},
+					},
+				})
+				volumeMounts = append(volumeMounts, corev1.VolumeMount{
+					Name:      tls.TlsSecretName,
+					ReadOnly:  true,
+					MountPath: filepath.Join(CertsPath, tls.TlsSecretName),
+				})
+			}
+		}
 	}
 	// check if ReplicaCount is defined
 	if gateway.Spec.ReplicaCount != 0 {
 		ReplicaCount = gateway.Spec.ReplicaCount
+		if gateway.Spec.AutoScaling.Enabled {
+			ReplicaCount = gateway.Spec.AutoScaling.MinReplicas
+		}
 	}
 	// Define the desired Deployment
 	deployment := &v1.Deployment{
@@ -97,6 +120,9 @@ func createUpdateDeployment(r GatewayReconciler, ctx context.Context, req ctrl.R
 							Ports: []corev1.ContainerPort{
 								{
 									ContainerPort: 8080,
+								},
+								{
+									ContainerPort: 8443,
 								},
 							},
 							ReadinessProbe: &corev1.Probe{
