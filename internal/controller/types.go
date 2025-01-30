@@ -192,3 +192,6 @@ type Key struct {
 	Cert string `yaml:"cert" json:"cert"`
 	Key  string `yaml:"key" json:"key"`
 }
+type BodyLimitRuleMiddleware struct {
+	Limit string `yaml:"limit" json:"limit"`
+}

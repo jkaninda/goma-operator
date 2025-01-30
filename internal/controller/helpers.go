@@ -247,6 +247,7 @@ func mapMid(middleware gomaprojv1beta1.Middleware) *Middleware {
 		httpCache:                  &httpCacheRule{},
 		AccessMiddleware:           &AccessRuleMiddleware{},
 		redirectScheme:             &RedirectSchemeRuleMiddleware{},
+		bodyLimit:                  &BodyLimitRuleMiddleware{},
 	}
 
 	rule, exists := ruleMapping[middleware.Spec.Type]
