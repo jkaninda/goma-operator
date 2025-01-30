@@ -5,7 +5,7 @@ const (
 	ConfigPath           = "/etc/goma"
 	CertsPath            = "/etc/goma/certs"
 	BelongsTo            = "goma-gateway"
-	GatewayConfigVersion = "1.0"
+	GatewayConfigVersion = "2"
 	FinalizerName        = "gomaproj.github.io/resources.finalizer"
 	ConfigName           = "goma.yml"
 	TLSCertFile          = "/etc/goma/certs/tls.crt"
@@ -26,6 +26,7 @@ const (
 	forwardAuth      = "forwardAuth"
 	httpCache        = "httpCache"
 	redirectScheme   = "redirectScheme"
+	bodyLimit        = "bodyLimit"
 )
 
 var (
