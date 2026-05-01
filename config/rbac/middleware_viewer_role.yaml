@@ -8,7 +8,7 @@ metadata:
   name: middleware-viewer-role
 rules:
 - apiGroups:
-  - gomaproj.github.io
+  - gateway.jkaninda.dev
   resources:
   - middlewares
   verbs:
@@ -16,7 +16,7 @@ rules:
   - list
   - watch
 - apiGroups:
-  - gomaproj.github.io
+  - gateway.jkaninda.dev
   resources:
   - middlewares/status
   verbs:

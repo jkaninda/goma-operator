@@ -1,0 +1,30 @@
+# DNS-01 challenge for wildcard certificates. Requires a Secret with the
+# DNS provider's API token.
+apiVersion: v1
+kind: Secret
+metadata:
+  name: cloudflare-credentials
+  namespace: default
+type: Opaque
+stringData:
+  apiToken: "REPLACE_ME_WITH_A_CLOUDFLARE_TOKEN"
+---
+apiVersion: gateway.jkaninda.dev/v1alpha1
+kind: Gateway
+metadata:
+  name: gateway-wildcard
+  namespace: default
+spec:
+  replicas: 2
+  service:
+    type: LoadBalancer
+    httpPort: 80
+    httpsPort: 443
+  certManager:
+    provider: acme
+    acme:
+      email: ops@example.com
+      termsAccepted: true
+      challengeType: dns-01
+      dnsProvider: cloudflare
+      credentialsSecret: cloudflare-credentials

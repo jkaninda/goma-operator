@@ -1,0 +1,15 @@
+# NodePort exposure — useful for bare-metal clusters without a cloud LB.
+apiVersion: gateway.jkaninda.dev/v1alpha1
+kind: Gateway
+metadata:
+  name: gateway-nodeport
+  namespace: default
+spec:
+  replicas: 2
+  service:
+    type: NodePort
+    httpPort: 8080
+    httpsPort: 8443
+    httpNodePort: 30080
+    httpsNodePort: 30443
+    externalTrafficPolicy: Local

@@ -1,0 +1,106 @@
+# End-to-end example: an Ingress-style Gateway with Let's Encrypt, two
+# Routes (public + authenticated API), a JWT middleware, and a per-IP
+# rate limiter. Apply in order or all at once with `kubectl apply -f`.
+apiVersion: gateway.jkaninda.dev/v1alpha1
+kind: Gateway
+metadata:
+  name: prod-gateway
+  namespace: default
+spec:
+  replicas: 3
+  service:
+    type: LoadBalancer
+    httpPort: 80
+    httpsPort: 443
+    externalTrafficPolicy: Local
+  autoScaling:
+    enabled: true
+    minReplicas: 3
+    maxReplicas: 12
+    targetCPUUtilizationPercentage: 70
+  server:
+    logLevel: info
+    monitoring:
+      enableMetrics: true
+  certManager:
+    provider: acme
+    acme:
+      email: ops@example.com
+      termsAccepted: true
+      challengeType: http-01
+---
+apiVersion: gateway.jkaninda.dev/v1alpha1
+kind: Middleware
+metadata:
+  name: prod-jwt
+  namespace: default
+spec:
+  type: jwtAuth
+  rule:
+    jwksUrl: https://auth.example.com/.well-known/jwks.json
+    issuer: https://auth.example.com/
+    audience: api.example.com
+    algo: RS256
+    forwardAuthorization: false
+    claimsExpression: >
+        Equals('email_verified', true) && !Equals('account_disabled', true)
+    forwardHeaders:
+      X-User-ID: sub
+      X-User-Email: email
+      X-User-Name: name
+---
+apiVersion: gateway.jkaninda.dev/v1alpha1
+kind: Middleware
+metadata:
+  name: prod-rate-limit
+  namespace: default
+spec:
+  type: rateLimit
+  rule:
+    requestsPerUnit: 300
+    unit: minute
+    burst: 50
+---
+# Public marketing site — no auth, just rate-limited.
+apiVersion: gateway.jkaninda.dev/v1alpha1
+kind: Route
+metadata:
+  name: www
+  namespace: default
+spec:
+  gateways:
+    - prod
+  path: /
+  hosts:
+    - www.example.com
+    - example.com
+  target: http://www.default.svc.cluster.local:80
+  middlewares:
+    - prod-rate-limit
+---
+# Authenticated API behind JWT + rate limit, with health-checked backends.
+apiVersion: gateway.jkaninda.dev/v1alpha1
+kind: Route
+metadata:
+  name: api
+  namespace: default
+spec:
+  gateways:
+    - prod-gateway
+  path: /
+  hosts:
+    - api.example.com
+  backends:
+    - endpoint: http://api.default.svc.cluster.local:8080
+      weight: 100
+  healthCheck:
+    path: /healthz
+    interval: 15s
+    timeout: 3s
+    healthyStatuses: [200]
+  security:
+    forwardHostHeaders: true
+    enableExploitProtection: true
+  middlewares:
+    - prod-jwt
+    - prod-rate-limit

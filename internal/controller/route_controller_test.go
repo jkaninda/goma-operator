@@ -27,7 +27,7 @@ import (
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	gomaprojv1beta1 "github.com/jkaninda/goma-operator/api/v1beta1"
+	gatewayv1alpha1 "github.com/jkaninda/goma-operator/api/v1alpha1"
 )
 
 var _ = Describe("Route Controller", func() {
@@ -40,48 +40,20 @@ var _ = Describe("Route Controller", func() {
 			Name:      resourceName,
 			Namespace: "default", // TODO(user):Modify as needed
 		}
-		gateway := &gomaprojv1beta1.Gateway{}
-
-		route := &gomaprojv1beta1.Route{}
+		route := &gatewayv1alpha1.Route{}
 
 		BeforeEach(func() {
-			By("creating the custom resource for the Kind Gateway")
-			err := k8sClient.Get(ctx, typeNamespacedName, gateway)
-			if err != nil && errors.IsNotFound(err) {
-				resource := &gomaprojv1beta1.Gateway{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      resourceName,
-						Namespace: "default",
-					},
-					Spec: gomaprojv1beta1.GatewaySpec{
-						GatewayVersion: "latest",
-						Server:         gomaprojv1beta1.Server{},
-						ReplicaCount:   1,
-						AutoScaling: gomaprojv1beta1.AutoScaling{
-							Enabled:                        false,
-							MinReplicas:                    2,
-							MaxReplicas:                    5,
-							TargetCPUUtilizationPercentage: 80,
-						},
-					},
-				}
-				Expect(k8sClient.Create(ctx, resource)).To(Succeed())
-			}
 			By("creating the custom resource for the Kind Route")
-			err = k8sClient.Get(ctx, typeNamespacedName, route)
+			err := k8sClient.Get(ctx, typeNamespacedName, route)
 			if err != nil && errors.IsNotFound(err) {
-				resource := &gomaprojv1beta1.Route{
+				resource := &gatewayv1alpha1.Route{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      resourceName,
 						Namespace: "default",
 					},
-					Spec: gomaprojv1beta1.RouteSpec{
-						Gateway: resourceName,
-
-						Path:        "/",
-						Rewrite:     "/",
-						Destination: "https://example.com",
-						Methods:     []string{"GET", "POST"},
+					Spec: gatewayv1alpha1.RouteSpec{
+						Gateways: []string{"test-gateway"},
+						Path:     "/test",
 					},
 				}
 				Expect(k8sClient.Create(ctx, resource)).To(Succeed())
@@ -90,7 +62,7 @@ var _ = Describe("Route Controller", func() {
 
 		AfterEach(func() {
 			// TODO(user): Cleanup logic after each test, like removing the resource instance.
-			resource := &gomaprojv1beta1.Route{}
+			resource := &gatewayv1alpha1.Route{}
 			err := k8sClient.Get(ctx, typeNamespacedName, resource)
 			Expect(err).NotTo(HaveOccurred())
 

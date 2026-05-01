@@ -8,6 +8,8 @@ rules:
   - ""
   resources:
   - configmaps
+  - secrets
+  - serviceaccounts
   - services
   verbs:
   - create
@@ -17,14 +19,6 @@ rules:
   - patch
   - update
   - watch
-- apiGroups:
-  - ""
-  resources:
-  - events
-  verbs:
-  - create
-  - patch
-  - update
 - apiGroups:
   - apps
   resources:
@@ -50,7 +44,7 @@ rules:
   - update
   - watch
 - apiGroups:
-  - gomaproj.github.io
+  - gateway.jkaninda.dev
   resources:
   - gateways
   - middlewares
@@ -64,7 +58,7 @@ rules:
   - update
   - watch
 - apiGroups:
-  - gomaproj.github.io
+  - gateway.jkaninda.dev
   resources:
   - gateways/finalizers
   - middlewares/finalizers
@@ -72,7 +66,7 @@ rules:
   verbs:
   - update
 - apiGroups:
-  - gomaproj.github.io
+  - gateway.jkaninda.dev
   resources:
   - gateways/status
   - middlewares/status
@@ -81,3 +75,16 @@ rules:
   - get
   - patch
   - update
+- apiGroups:
+  - rbac.authorization.k8s.io
+  resources:
+  - rolebindings
+  - roles
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch

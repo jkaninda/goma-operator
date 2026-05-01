@@ -1,0 +1,13 @@
+# Minimal Gateway. Uses the default ClusterIP Service on container ports
+# 8080/8443 and the goma-k8s-provider sidecar (enabled by default) so Route
+# and Middleware CRs are hot-reloaded without restarting the gateway pod.
+apiVersion: gateway.jkaninda.dev/v1alpha1
+kind: Gateway
+metadata:
+  name: gateway
+  namespace: default
+spec:
+  image: jkaninda/goma-gateway:latest
+  replicas: 1
+  server:
+    logLevel: info

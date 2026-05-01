@@ -1,0 +1,27 @@
+# Goma Gateway exposed as an Ingress-style LoadBalancer on standard HTTP/HTTPS ports.
+# The gateway container keeps its default 8080/8443 ports; the Service remaps
+# external 80/443 → container 8080/8443.
+apiVersion: gateway.jkaninda.dev/v1alpha1
+kind: Gateway
+metadata:
+  name: ingress
+  namespace: default
+spec:
+  image: jkaninda/goma-gateway:latest
+  replicas: 2
+
+  service:
+    type: LoadBalancer
+    httpPort: 80                 # external :80 → container :8080
+    httpsPort: 443               # external :443 → container :8443
+    externalTrafficPolicy: Local # preserve client source IPs
+    annotations:
+      # AWS NLB example — adjust for your cloud provider:
+      # service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
+
+  server:
+    logLevel: info
+    monitoring:
+      enableMetrics: true
+      enableReadiness: true
+      enableLiveness: true

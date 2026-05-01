@@ -1,0 +1,17 @@
+# JWT validation against a remote JWKS endpoint (e.g. Auth0, Keycloak, Okta).
+apiVersion: gateway.jkaninda.dev/v1alpha1
+kind: Middleware
+metadata:
+  name: api-jwt
+  namespace: default
+spec:
+  type: jwtAuth
+  rule:
+    jwksUrl: https://auth.example.com/.well-known/jwks.json
+    issuer: https://auth.example.com/
+    audience: api.example.com
+    algorithms:
+      - RS256
+    forwardHeaders:
+      X-User-Id: sub
+      X-User-Email: email

@@ -18,18 +18,21 @@ package controller
 
 import (
 	"context"
-	gomaprojv1beta1 "github.com/jkaninda/goma-operator/api/v1beta1"
+
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
+
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	gatewayv1alpha1 "github.com/jkaninda/goma-operator/api/v1alpha1"
 )
 
 var _ = Describe("Gateway Controller", func() {
 	Context("When reconciling a resource", func() {
-		const resourceName = "test-gateway"
+		const resourceName = "test-resource"
 
 		ctx := context.Background()
 
@@ -37,35 +40,25 @@ var _ = Describe("Gateway Controller", func() {
 			Name:      resourceName,
 			Namespace: "default",
 		}
-		gateway := &gomaprojv1beta1.Gateway{}
+		gateway := &gatewayv1alpha1.Gateway{}
 
 		BeforeEach(func() {
 			By("creating the custom resource for the Kind Gateway")
 			err := k8sClient.Get(ctx, typeNamespacedName, gateway)
 			if err != nil && errors.IsNotFound(err) {
-				resource := &gomaprojv1beta1.Gateway{
+				resource := &gatewayv1alpha1.Gateway{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      resourceName,
 						Namespace: "default",
 					},
-					Spec: gomaprojv1beta1.GatewaySpec{
-						GatewayVersion: "latest",
-						Server:         gomaprojv1beta1.Server{},
-						ReplicaCount:   1,
-						AutoScaling: gomaprojv1beta1.AutoScaling{
-							Enabled:                        false,
-							MinReplicas:                    2,
-							MaxReplicas:                    5,
-							TargetCPUUtilizationPercentage: 80,
-						},
-					},
+					// TODO(user): Specify other spec details if needed.
 				}
 				Expect(k8sClient.Create(ctx, resource)).To(Succeed())
 			}
 		})
 
 		AfterEach(func() {
-			resource := &gomaprojv1beta1.Gateway{}
+			resource := &gatewayv1alpha1.Gateway{}
 			err := k8sClient.Get(ctx, typeNamespacedName, resource)
 			Expect(err).NotTo(HaveOccurred())
 
@@ -83,7 +76,8 @@ var _ = Describe("Gateway Controller", func() {
 				NamespacedName: typeNamespacedName,
 			})
 			Expect(err).NotTo(HaveOccurred())
-
+			// TODO(user): Add more specific assertions depending on your controller's reconciliation logic.
+			// Example: If you expect a certain status condition after reconciliation, verify it here.
 		})
 	})
 })

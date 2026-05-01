@@ -2,9 +2,9 @@
 # since it depends on service name and namespace that are out of this kustomize package.
 # It should be run by config/default
 resources:
-- bases/gomaproj.github.io_gateways.yaml
-- bases/gomaproj.github.io_routes.yaml
-- bases/gomaproj.github.io_middlewares.yaml
+- bases/gateway.jkaninda.dev_gateways.yaml
+- bases/gateway.jkaninda.dev_routes.yaml
+- bases/gateway.jkaninda.dev_middlewares.yaml
 # +kubebuilder:scaffold:crdkustomizeresource
 
 patches:

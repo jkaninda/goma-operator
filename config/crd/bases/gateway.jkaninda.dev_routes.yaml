@@ -1,0 +1,340 @@
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.16.4
+  name: routes.gateway.jkaninda.dev
+spec:
+  group: gateway.jkaninda.dev
+  names:
+    kind: Route
+    listKind: RouteList
+    plural: routes
+    singular: route
+  scope: Namespaced
+  versions:
+  - additionalPrinterColumns:
+    - jsonPath: .spec.gateways
+      name: Gateways
+      type: string
+    - jsonPath: .spec.path
+      name: Path
+      type: string
+    - jsonPath: .spec.target
+      name: Target
+      type: string
+    - jsonPath: .status.ready
+      name: Ready
+      type: boolean
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: Route is the Schema for the routes API.
+        properties:
+          apiVersion:
+            description: |-
+              APIVersion defines the versioned schema of this representation of an object.
+              Servers should convert recognized schemas to the latest internal value, and
+              may reject unrecognized values.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
+            type: string
+          kind:
+            description: |-
+              Kind is a string value representing the REST resource this object represents.
+              Servers may infer this from the endpoint the client submits requests to.
+              Cannot be updated.
+              In CamelCase.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: RouteSpec defines the desired state of Route.
+            properties:
+              backends:
+                description: Backends defines multiple backend servers for load balancing.
+                items:
+                  description: BackendSpec defines a backend server for load balancing.
+                  properties:
+                    endpoint:
+                      description: Endpoint is the backend URL.
+                      type: string
+                    exclusive:
+                      description: |-
+                        Exclusive, when true, restricts this backend to traffic that
+                        satisfies its Match rules — unmatched requests are never sent here,
+                        even during load balancing. When false (default), matching requests
+                        are pinned but the backend still participates in the general pool.
+                      type: boolean
+                    match:
+                      description: |-
+                        Match defines request conditions that pin traffic to this backend
+                        (e.g. route a header/cookie/query/IP to a specific backend). All
+                        entries must match (AND).
+                      items:
+                        description: BackendMatchSpec is a single request-matching
+                          condition for a Backend.
+                        properties:
+                          name:
+                            description: Name of the header/cookie/query parameter
+                              (ignored for source=ip).
+                            type: string
+                          operator:
+                            description: Operator is the comparison applied between
+                              the source value and Value.
+                            enum:
+                            - equals
+                            - not_equals
+                            - contains
+                            - not_contains
+                            - starts_with
+                            - ends_with
+                            - regex
+                            - in
+                            type: string
+                          source:
+                            description: Source is the part of the request to inspect.
+                            enum:
+                            - header
+                            - cookie
+                            - query
+                            - ip
+                            type: string
+                          value:
+                            description: Value to compare against. For operator=in,
+                              use a comma-separated list.
+                            type: string
+                        required:
+                        - operator
+                        - source
+                        - value
+                        type: object
+                      type: array
+                    weight:
+                      description: Weight is the load balancing weight.
+                      type: integer
+                  required:
+                  - endpoint
+                  type: object
+                type: array
+              disableMetrics:
+                description: |-
+                  DisableMetrics disables Prometheus metrics collection for this route.
+                  Useful for silencing high-volume or low-value endpoints (health probes,
+                  static assets) from per-route metric series.
+                type: boolean
+              enabled:
+                default: true
+                description: Enabled controls whether the route is active.
+                type: boolean
+              gateways:
+                description: |-
+                  Gateways is the list of Gateway CR names this route is attached to
+                  (same namespace). A route may be consumed by one or more gateways.
+                items:
+                  type: string
+                minItems: 1
+                type: array
+              healthCheck:
+                description: HealthCheck configures backend health monitoring.
+                properties:
+                  healthyStatuses:
+                    description: HealthyStatuses is the list of HTTP status codes
+                      considered healthy.
+                    items:
+                      type: integer
+                    type: array
+                  interval:
+                    default: 30s
+                    description: Interval is the check interval (e.g., "30s").
+                    type: string
+                  path:
+                    description: Path is the health check endpoint path.
+                    type: string
+                  timeout:
+                    default: 5s
+                    description: Timeout is the check timeout (e.g., "5s").
+                    type: string
+                required:
+                - path
+                type: object
+              hosts:
+                description: Hosts lists domains for host-based routing.
+                items:
+                  type: string
+                type: array
+              maintenance:
+                description: Maintenance puts the route into maintenance mode.
+                properties:
+                  body:
+                    description: Body is the response body returned during maintenance.
+                    type: string
+                  enabled:
+                    description: Enabled controls whether maintenance mode is active.
+                    type: boolean
+                  status:
+                    default: 503
+                    description: Status is the HTTP status code returned during maintenance.
+                    type: integer
+                required:
+                - enabled
+                type: object
+              methods:
+                description: Methods lists the HTTP methods allowed for this route.
+                items:
+                  type: string
+                type: array
+              middlewares:
+                description: Middlewares lists Middleware CR names to apply to this
+                  route.
+                items:
+                  type: string
+                type: array
+              path:
+                description: Path is the URL path for this route.
+                minLength: 1
+                type: string
+              priority:
+                description: Priority determines route matching order (higher = matched
+                  first).
+                type: integer
+              rewrite:
+                description: Rewrite rewrites the incoming request path.
+                type: string
+              security:
+                description: Security defines route-level security settings.
+                properties:
+                  enableExploitProtection:
+                    description: EnableExploitProtection enables SQL injection and
+                      XSS protection.
+                    type: boolean
+                  forwardHostHeaders:
+                    default: true
+                    description: ForwardHostHeaders controls forwarding of X-Forwarded-Host
+                      and related headers.
+                    type: boolean
+                  tls:
+                    description: TLS defines route-level TLS settings for backend
+                      connections.
+                    properties:
+                      clientCertSecret:
+                        description: ClientCertSecret is the name of a K8s TLS Secret
+                          for mTLS client certificates.
+                        type: string
+                      insecureSkipVerify:
+                        description: InsecureSkipVerify disables TLS verification
+                          for the backend.
+                        type: boolean
+                      rootCAsSecret:
+                        description: RootCAsSecret is the name of a K8s Secret containing
+                          CA certificates.
+                        type: string
+                    type: object
+                type: object
+              target:
+                description: Target is the backend URL for this route.
+                type: string
+              tls:
+                description: |-
+                  TLS references a Kubernetes TLS Secret (type kubernetes.io/tls) whose
+                  certificate is served for this route's hosts. When the sidecar is
+                  enabled, the cert/key are written to disk and hot-reloaded into the
+                  gateway without a pod restart. This is the per-route serving
+                  certificate — for backend (upstream) TLS settings see Security.TLS.
+                properties:
+                  secretName:
+                    description: |-
+                      SecretName is the name of a kubernetes.io/tls Secret in the same
+                      namespace as the Route. The gateway will serve this certificate for
+                      the route's hosts.
+                    type: string
+                required:
+                - secretName
+                type: object
+            required:
+            - gateways
+            - path
+            type: object
+          status:
+            description: RouteStatus defines the observed state of Route.
+            properties:
+              conditions:
+                description: Conditions represent the latest available observations
+                  of the Route's state.
+                items:
+                  description: Condition contains details for one aspect of the current
+                    state of this API Resource.
+                  properties:
+                    lastTransitionTime:
+                      description: |-
+                        lastTransitionTime is the last time the condition transitioned from one status to another.
+                        This should be when the underlying condition changed.  If that is not known, then using the time when the API field changed is acceptable.
+                      format: date-time
+                      type: string
+                    message:
+                      description: |-
+                        message is a human readable message indicating details about the transition.
+                        This may be an empty string.
+                      maxLength: 32768
+                      type: string
+                    observedGeneration:
+                      description: |-
+                        observedGeneration represents the .metadata.generation that the condition was set based upon.
+                        For instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date
+                        with respect to the current state of the instance.
+                      format: int64
+                      minimum: 0
+                      type: integer
+                    reason:
+                      description: |-
+                        reason contains a programmatic identifier indicating the reason for the condition's last transition.
+                        Producers of specific condition types may define expected values and meanings for this field,
+                        and whether the values are considered a guaranteed API.
+                        The value should be a CamelCase string.
+                        This field may not be empty.
+                      maxLength: 1024
+                      minLength: 1
+                      pattern: ^[A-Za-z]([A-Za-z0-9_,:]*[A-Za-z0-9_])?$
+                      type: string
+                    status:
+                      description: status of the condition, one of True, False, Unknown.
+                      enum:
+                      - "True"
+                      - "False"
+                      - Unknown
+                      type: string
+                    type:
+                      description: type of condition in CamelCase or in foo.example.com/CamelCase.
+                      maxLength: 316
+                      pattern: ^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$
+                      type: string
+                  required:
+                  - lastTransitionTime
+                  - message
+                  - reason
+                  - status
+                  - type
+                  type: object
+                type: array
+              gatewayGeneration:
+                description: GatewayGeneration tracks which Gateway config generation
+                  includes this route.
+                format: int64
+                type: integer
+              ready:
+                description: Ready indicates whether the route is valid and synced.
+                type: boolean
+              synced:
+                description: Synced indicates whether the route config has been written
+                  to the Gateway's ConfigMap.
+                type: boolean
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}

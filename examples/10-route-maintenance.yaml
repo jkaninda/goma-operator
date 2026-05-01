@@ -1,0 +1,19 @@
+# Route in maintenance mode — returns a static 503 response instead of
+# proxying to the backend. Useful during planned downtime.
+apiVersion: gateway.jkaninda.dev/v1alpha1
+kind: Route
+metadata:
+  name: checkout
+  namespace: default
+spec:
+  gateways:
+    - gateway
+  path: /checkout
+  hosts:
+    - shop.example.com
+  target: http://checkout.default.svc.cluster.local:8080
+  maintenance:
+    enabled: true
+    status: 503
+    body: |
+      {"error":"maintenance","message":"Checkout is temporarily unavailable. Back at 14:00 UTC."}
