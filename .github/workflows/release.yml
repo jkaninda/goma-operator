@@ -11,18 +11,20 @@ permissions:
 jobs:
   release:
     runs-on: ubuntu-latest
+    env:
+      IMAGE: ${{ vars.BUILDKIT_IMAGE }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Get the tag name
-        id: get_tag_name
+      - name: Resolve version
+        id: version
         run: |
           TAG_NAME="${GITHUB_REF#refs/tags/}"
           VERSION="${TAG_NAME#v}"
-          echo "TAG_NAME=${TAG_NAME}" >> $GITHUB_ENV
-          echo "VERSION=${VERSION}" >> $GITHUB_ENV
-          echo "BUILD_TIME=$(date)" >> $GITHUB_ENV
+          echo "TAG_NAME=${TAG_NAME}" >> "$GITHUB_ENV"
+          echo "VERSION=${VERSION}" >> "$GITHUB_ENV"
+          echo "BUILD_TIME=$(date)" >> "$GITHUB_ENV"
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -43,8 +45,8 @@ jobs:
           file: ./Dockerfile
           platforms: linux/amd64,linux/arm64,linux/arm/v7
           tags: |
-            ${{ vars.BUILDKIT_IMAGE }}:${{ env.VERSION }}
-            ${{ vars.BUILDKIT_IMAGE }}:latest
+            ${{ env.IMAGE }}:${{ env.VERSION }}
+            ${{ env.IMAGE }}:latest
 
       - name: Set up Go
         uses: actions/setup-go@v5
@@ -53,12 +55,8 @@ jobs:
 
       - name: Generate install.yaml and CRDs
         run: |
-          cd config/manager && \
-          ../../bin/kustomize edit set image controller=${{ vars.BUILDKIT_IMAGE }}:${{ env.TAG_NAME }} || \
-          (make -C ../.. kustomize && ../../bin/kustomize edit set image controller=${{ vars.BUILDKIT_IMAGE }}:${{ env.TAG_NAME }})
-          cd ../..
-          make build-installer
-          mkdir -p dist
+          make build-installer IMG=${{ env.IMAGE }}:${{ env.VERSION }}
+          make kustomize
           $(pwd)/bin/kustomize build config/crd > dist/crds.yaml
 
       - name: Create GitHub Release
