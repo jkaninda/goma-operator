@@ -1,0 +1,13 @@
+# Per-IP rate limiter. When the Gateway is configured with a Redis backend
+# (see 07-gateway-redis-metrics.yaml), counters are shared across replicas.
+apiVersion: gateway.jkaninda.dev/v1alpha1
+kind: Middleware
+metadata:
+  name: api-rate-limit
+  namespace: default
+spec:
+  type: rateLimit
+  rule:
+    requestsPerUnit: 100
+    unit: minute
+    burst: 20

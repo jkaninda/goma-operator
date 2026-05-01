@@ -1,0 +1,20 @@
+# Goma Gateway exposed via NodePort, with specific node ports pinned.
+apiVersion: gateway.jkaninda.dev/v1alpha1
+kind: Gateway
+metadata:
+  name: nodeport
+  namespace: default
+spec:
+  image: jkaninda/goma-gateway:latest
+  replicas: 1
+
+  service:
+    type: NodePort
+    httpPort: 8080
+    httpsPort: 8443
+    httpNodePort: 30080
+    httpsNodePort: 30443
+    externalTrafficPolicy: Local
+
+  server:
+    logLevel: info

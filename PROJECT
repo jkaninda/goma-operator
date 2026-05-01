@@ -2,7 +2,7 @@
 # This file is used to track the info used to scaffold your project
 # and allow the plugins properly work.
 # More info: https://book.kubebuilder.io/reference/project-config.html
-domain: github.io
+domain: jkaninda.dev
 layout:
 - go.kubebuilder.io/v4
 projectName: goma-operator
@@ -12,26 +12,27 @@ resources:
     crdVersion: v1
     namespaced: true
   controller: true
-  domain: github.io
-  group: gomaproj
+  domain: jkaninda.dev
+  group: gateway
   kind: Gateway
-  path: github.com/jkaninda/goma-operator/api/v1beta1
-  version: v1beta1
+  path: github.com/jkaninda/goma-operator/api/v1alpha1
+  version: v1alpha1
 - api:
     crdVersion: v1
     namespaced: true
   controller: true
-  domain: github.io
-  group: gomaproj
+  domain: jkaninda.dev
+  group: gateway
   kind: Route
-  path: github.com/jkaninda/goma-operator/api/v1beta1
-  version: v1beta1
+  path: github.com/jkaninda/goma-operator/api/v1alpha1
+  version: v1alpha1
 - api:
     crdVersion: v1
     namespaced: true
-  domain: github.io
-  group: gomaproj
+  controller: true
+  domain: jkaninda.dev
+  group: gateway
   kind: Middleware
-  path: github.com/jkaninda/goma-operator/api/v1beta1
-  version: v1beta1
+  path: github.com/jkaninda/goma-operator/api/v1alpha1
+  version: v1alpha1
 version: "3"

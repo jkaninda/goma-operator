@@ -1,0 +1,43 @@
+# Gateway with Redis (shared state for rate-limit middleware across replicas)
+# and Prometheus metrics, with the /metrics endpoint protected by a
+# basic-auth Middleware and restricted to an internal hostname.
+apiVersion: v1
+kind: Secret
+metadata:
+  name: redis-auth
+  namespace: default
+type: Opaque
+stringData:
+  password: "changeme"
+---
+apiVersion: gateway.jkaninda.dev/v1alpha1
+kind: Gateway
+metadata:
+  name: gateway-observed
+  namespace: default
+spec:
+  replicas: 3
+  server:
+    logLevel: info
+    redis:
+      addr: redis.default.svc.cluster.local:6379
+      password: "changeme"
+    monitoring:
+      enableMetrics: true
+      metricsPath: /metrics
+      host: metrics.internal.example.com
+      middleware:
+        metrics:
+          - metrics-basic-auth
+---
+apiVersion: gateway.jkaninda.dev/v1alpha1
+kind: Middleware
+metadata:
+  name: metrics-basic-auth
+  namespace: default
+spec:
+  type: basic
+  rule:
+    realm: "metrics"
+    users:
+      - "prometheus:$2a$10$abcdefghijklmnopqrstuv"

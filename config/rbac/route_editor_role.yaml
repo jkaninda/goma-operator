@@ -8,7 +8,7 @@ metadata:
   name: route-editor-role
 rules:
 - apiGroups:
-  - gomaproj.github.io
+  - gateway.jkaninda.dev
   resources:
   - routes
   verbs:
@@ -20,7 +20,7 @@ rules:
   - update
   - watch
 - apiGroups:
-  - gomaproj.github.io
+  - gateway.jkaninda.dev
   resources:
   - routes/status
   verbs:

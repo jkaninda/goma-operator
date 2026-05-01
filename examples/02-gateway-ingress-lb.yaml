@@ -1,0 +1,23 @@
+# Ingress-style Gateway: cloud LoadBalancer on standard 80/443, remapped to
+# the container's 8080/8443. Preserves client source IPs and includes
+# example AWS NLB annotations.
+apiVersion: gateway.jkaninda.dev/v1alpha1
+kind: Gateway
+metadata:
+  name: ingress
+  namespace: default
+spec:
+  image: jkaninda/goma-gateway:latest
+  replicas: 2
+  service:
+    type: LoadBalancer
+    httpPort: 80
+    httpsPort: 443
+    externalTrafficPolicy: Local
+    annotations:
+      service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
+      service.beta.kubernetes.io/aws-load-balancer-scheme: "internet-facing"
+  server:
+    logLevel: info
+    monitoring:
+      enableMetrics: true

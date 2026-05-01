@@ -1,0 +1,17 @@
+# forwardAuth delegates authn/authz to an external service. The gateway
+# sends a subrequest to authUrl; a 2xx response allows the request through,
+# anything else is returned to the client.
+apiVersion: gateway.jkaninda.dev/v1alpha1
+kind: Middleware
+metadata:
+  name: forward-auth
+  namespace: default
+spec:
+  type: forwardAuth
+  rule:
+    authUrl: http://auth.default.svc.cluster.local:8080/verify
+    authSignIn: https://app.example.com/login
+    trustForwardHeader: true
+    authResponseHeaders:
+      - X-User-Id
+      - X-User-Roles

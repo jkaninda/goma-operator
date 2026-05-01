@@ -1,0 +1,39 @@
+# Weighted load-balancing across multiple backends with active health checks.
+apiVersion: gateway.jkaninda.dev/v1alpha1
+kind: Route
+metadata:
+  name: api-lb
+  namespace: default
+spec:
+  gateways:
+    - gateway
+  path: /api
+  rewrite: /
+  hosts:
+    - api.example.com
+  backends:
+    # Default pool: 80/20 weighted split between v1 and v2.
+    - endpoint: http://api-v1.default.svc.cluster.local:8080
+      weight: 80
+    - endpoint: http://api-v2.default.svc.cluster.local:8080
+      weight: 20
+    # Canary backend — only receives requests carrying the header
+    # X-Canary: true. `exclusive: true` keeps it out of the general
+    # load-balancing pool.
+    - endpoint: http://api-canary.default.svc.cluster.local:8080
+      exclusive: true
+      match:
+        - source: header
+          name: X-Canary
+          operator: equals
+          value: "true"
+  healthCheck:
+    path: /healthz
+    interval: 15s
+    timeout: 3s
+    healthyStatuses:
+      - 200
+      - 204
+  security:
+    forwardHostHeaders: true
+    enableExploitProtection: true

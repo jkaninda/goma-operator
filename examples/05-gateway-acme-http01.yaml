@@ -1,0 +1,23 @@
+# Let's Encrypt HTTP-01 challenge. The gateway must be reachable on :80 from
+# the public internet for the challenge to succeed. The ACME store
+# (acme.json) is synced to the "goma-acme" Secret by the k8s provider
+# sidecar so issued certificates survive pod restarts.
+apiVersion: gateway.jkaninda.dev/v1alpha1
+kind: Gateway
+metadata:
+  name: gateway-acme
+  namespace: default
+spec:
+  replicas: 2
+  service:
+    type: LoadBalancer
+    httpPort: 80
+    httpsPort: 443
+  certManager:
+    provider: acme
+    acme:
+      email: ops@example.com
+      termsAccepted: true
+      challengeType: http-01
+      # For testing, switch to Let's Encrypt staging to avoid rate limits:
+      # directoryUrl: https://acme-staging-v02.api.letsencrypt.org/directory

@@ -12,9 +12,9 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.16.4
-  name: gateways.gomaproj.github.io
+  name: gateways.gateway.jkaninda.dev
 spec:
-  group: gomaproj.github.io
+  group: gateway.jkaninda.dev
   names:
     kind: Gateway
     listKind: GatewayList
@@ -22,7 +22,26 @@ spec:
     singular: gateway
   scope: Namespaced
   versions:
-  - name: v1beta1
+  - additionalPrinterColumns:
+    - jsonPath: .spec.service.type
+      name: Type
+      type: string
+    - jsonPath: .status.addresses[0].value
+      name: Address
+      type: string
+    - jsonPath: .status.replicas
+      name: Replicas
+      type: integer
+    - jsonPath: .status.readyReplicas
+      name: Ready
+      type: integer
+    - jsonPath: .status.routes
+      name: Routes
+      type: integer
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    name: v1alpha1
     schema:
       openAPIV3Schema:
         description: Gateway is the Schema for the gateways API.
@@ -45,13 +64,10 @@ spec:
           metadata:
             type: object
           spec:
-            description: GatewaySpec defines the desired configuration and state of
-              the Gateway deployment.
+            description: GatewaySpec defines the desired state of Gateway.
             properties:
               affinity:
-                description: |-
-                  Affinity defines node affinity rules for pod scheduling.
-                  It allows you to specify rules for how pods should be placed on specific nodes, based on labels, zones, or other factors.
+                description: Affinity defines scheduling constraints for gateway pods.
                 properties:
                   nodeAffinity:
                     description: Describes node affinity scheduling rules for the
@@ -971,40 +987,106 @@ spec:
                     type: object
                 type: object
               autoScaling:
-                description: |-
-                  AutoScaling defines the settings for enabling or disabling pod autoscaling.
-                  When enabled, it allows Kubernetes to automatically adjust the number of Gateway pods based on usage metrics (e.g., CPU or memory).
+                description: AutoScaling defines the horizontal pod autoscaling configuration.
                 properties:
                   enabled:
+                    description: Enabled controls whether HPA is created.
                     type: boolean
                   maxReplicas:
+                    default: 10
+                    description: MaxReplicas is the upper limit for the number of
+                      replicas.
                     format: int32
+                    minimum: 1
                     type: integer
                   minReplicas:
+                    default: 1
+                    description: MinReplicas is the lower limit for the number of
+                      replicas.
                     format: int32
+                    minimum: 1
                     type: integer
                   targetCPUUtilizationPercentage:
+                    description: TargetCPUUtilizationPercentage is the target average
+                      CPU utilization.
                     format: int32
                     type: integer
                   targetMemoryUtilizationPercentage:
+                    description: TargetMemoryUtilizationPercentage is the target average
+                      memory utilization.
                     format: int32
                     type: integer
+                required:
+                - enabled
+                - maxReplicas
                 type: object
-              gatewayVersion:
+              certManager:
                 description: |-
-                  Deprecated,
-                  Please use ImageName instead
-                type: string
-              imageName:
-                description: |-
-                  ImageName specifies the image of the Goma Gateway to use.
-                  This value is used to pull the desired image for the Goma Gateway service.
-                  Default: jkaninda/goma-gateway:latest
+                  CertManager configures Goma Gateway's built-in ACME / Let's Encrypt
+                  certificate manager. When enabled, the gateway will automatically
+                  obtain and renew certificates for the domains listed in Route hosts.
+                properties:
+                  acme:
+                    description: ACME configures Let's Encrypt / ACME certificate
+                      issuance.
+                    properties:
+                      challengeType:
+                        default: http-01
+                        description: |-
+                          ChallengeType is the ACME challenge solver: "http-01" or "dns-01".
+                          Use "dns-01" for wildcard certificates.
+                        enum:
+                        - http-01
+                        - dns-01
+                        type: string
+                      credentialsSecret:
+                        description: |-
+                          CredentialsSecret references a Kubernetes Secret containing DNS
+                          provider credentials. The Secret must have an "apiToken" key (and
+                          any other provider-specific keys mounted as environment variables).
+                          Required when ChallengeType is "dns-01".
+                        type: string
+                      directoryUrl:
+                        description: |-
+                          DirectoryURL overrides the ACME directory endpoint (defaults to
+                          Let's Encrypt production). Use the staging URL for testing:
+                          https://acme-staging-v02.api.letsencrypt.org/directory
+                        type: string
+                      dnsProvider:
+                        description: |-
+                          DNSProvider is the DNS-01 challenge provider (e.g., "cloudflare",
+                          "route53", "digitalocean"). Required when ChallengeType is "dns-01".
+                        type: string
+                      email:
+                        description: |-
+                          Email is the contact email for the ACME account. Required for
+                          Let's Encrypt expiration warnings and account recovery.
+                        type: string
+                      termsAccepted:
+                        default: true
+                        description: |-
+                          TermsAccepted indicates acceptance of the ACME provider's Terms
+                          of Service. Must be true for Let's Encrypt.
+                        type: boolean
+                    required:
+                    - email
+                    type: object
+                  provider:
+                    default: acme
+                    description: |-
+                      Provider selects the cert manager backend. Currently only "acme"
+                      is supported.
+                    enum:
+                    - acme
+                    type: string
+                type: object
+              image:
+                default: jkaninda/goma-gateway:latest
+                description: Image is the full container image reference for goma-gateway.
                 type: string
               imagePullSecrets:
-                description: ImagePullSecrets is an optional list of references to
-                  secrets in the same namespace to use for pulling any of the images
-                  used by this PodSpec.
+                description: ImagePullSecrets is a list of references to secrets for
+                  pulling the gateway image.
                 items:
                   description: |-
                     LocalObjectReference contains enough information to let you locate the
@@ -1022,18 +1104,142 @@ spec:
                   type: object
                   x-kubernetes-map-type: atomic
                 type: array
-              replicaCount:
-                description: |-
-                  ReplicaCount defines the number of replicas for the Gateway deployment.
-                  This field determines how many instances of the Gateway service will run in the cluster.
-                  A higher count provides better availability and fault tolerance.
+              providers:
+                description: Providers defines dynamic configuration providers (file/k8s
+                  sidecar, http, git).
+                properties:
+                  git:
+                    description: |-
+                      Git configures a Git-based provider that pulls configuration from
+                      a repository.
+                    properties:
+                      auth:
+                        description: Auth configures Git authentication.
+                        properties:
+                          secretName:
+                            description: |-
+                              SecretName references a K8s Secret containing auth material:
+                                - type=token: key "token"
+                                - type=basic: keys "username" and "password"
+                                - type=ssh:   key "ssh-privatekey"
+                            type: string
+                          type:
+                            description: 'Type is the auth type: "token", "basic",
+                              or "ssh".'
+                            enum:
+                            - token
+                            - basic
+                            - ssh
+                            type: string
+                        required:
+                        - secretName
+                        - type
+                        type: object
+                      branch:
+                        default: main
+                        description: Branch to check out.
+                        type: string
+                      cloneDir:
+                        description: CloneDir is the local directory where the repo
+                          is cloned.
+                        type: string
+                      enabled:
+                        description: Enabled controls whether the Git provider is
+                          active.
+                        type: boolean
+                      interval:
+                        default: 60s
+                        description: Interval between pulls (e.g., "60s").
+                        type: string
+                      path:
+                        description: Path is the subdirectory inside the repo containing
+                          config files.
+                        type: string
+                      url:
+                        description: URL is the Git repository URL.
+                        type: string
+                    required:
+                    - enabled
+                    - url
+                    type: object
+                  http:
+                    description: |-
+                      HTTP configures a remote HTTP provider that periodically fetches
+                      configuration from a URL.
+                    properties:
+                      cacheDir:
+                        description: CacheDir is where responses are cached.
+                        type: string
+                      enabled:
+                        description: Enabled controls whether the HTTP provider is
+                          active.
+                        type: boolean
+                      endpoint:
+                        description: Endpoint is the URL to fetch configuration from.
+                        type: string
+                      headers:
+                        additionalProperties:
+                          type: string
+                        description: |-
+                          Headers are additional HTTP headers sent with each request.
+                          For secrets, prefer HeadersSecret.
+                        type: object
+                      headersSecret:
+                        description: |-
+                          HeadersSecret references a K8s Secret whose keys/values are mounted
+                          as environment variables and can be referenced via ${VAR} in Headers.
+                        type: string
+                      insecureSkipVerify:
+                        description: InsecureSkipVerify disables TLS verification.
+                        type: boolean
+                      interval:
+                        default: 60s
+                        description: Interval between fetches (e.g., "60s", "5m").
+                        type: string
+                      retryAttempts:
+                        default: 3
+                        description: RetryAttempts is the number of retries on failure.
+                        type: integer
+                      retryDelay:
+                        default: 2s
+                        description: RetryDelay between retries (e.g., "2s").
+                        type: string
+                      timeout:
+                        default: 10s
+                        description: Timeout for each fetch request (e.g., "10s").
+                        type: string
+                    required:
+                    - enabled
+                    - endpoint
+                    type: object
+                  kubernetes:
+                    description: |-
+                      Kubernetes configures the goma-k8s-provider sidecar which watches
+                      Route/Middleware CRDs and writes config to /etc/goma/providers/k8s.
+                    properties:
+                      enabled:
+                        default: true
+                        description: |-
+                          Enabled controls whether the goma-k8s-provider sidecar is injected
+                          into the gateway pod. Defaults to true when the spec is omitted.
+                          Set to false to disable the sidecar and deliver routes/middlewares
+                          only through the static ConfigMap (restart on every change).
+                        type: boolean
+                      image:
+                        default: jkaninda/goma-k8s-provider:latest
+                        description: Image is the sidecar container image.
+                        type: string
+                    type: object
+                type: object
+              replicas:
+                default: 1
+                description: Replicas is the desired number of gateway pods.
                 format: int32
+                minimum: 0
                 type: integer
               resources:
-                description: |-
-                  Resources defines the resource requests and limits for the Gateway deployment.
-                  It specifies the amount of CPU and memory the Gateway pods should reserve, as well as any limits.
-                  This helps ensure proper resource allocation and avoids resource contention.
+                description: Resources defines the compute resource requirements for
+                  the gateway container.
                 properties:
                   claims:
                     description: |-
@@ -1092,118 +1298,258 @@ spec:
                     type: object
                 type: object
               server:
-                description: |-
-                  Server contains the configuration for the Gateway server.
-                  It includes settings related to the server such as port, protocol, and other gateway-related configurations.
+                description: Server defines the gateway server configuration.
                 properties:
-                  cors:
-                    description: Cors holds the global CORS (Cross-Origin Resource
-                      Sharing) configuration for the proxy.
-                    properties:
-                      headers:
-                        additionalProperties:
-                          type: string
-                        description: Headers contains custom headers
-                        type: object
-                      origins:
-                        description: Cors contains Allowed origins,
-                        items:
-                          type: string
-                        type: array
-                    type: object
-                  disableHealthCheckStatus:
-                    description: DisableHealthCheckStatus enables or disables health
-                      checks for routes.
-                    type: boolean
-                  disableKeepAlive:
-                    description: DisableKeepAlive enables or disables the server's
-                      KeepAlive connections.
-                    type: boolean
-                  enableMetrics:
-                    description: EnableMetrics toggles the collection and exposure
-                      of server metrics.
-                    type: boolean
-                  enableStrictSlash:
-                    description: |-
-                      EnableStrictSlash enables or disables strict routing and trailing slashes.
-
-                      When enabled, the router will match the path with or without a trailing slash.
-                    type: boolean
-                  errorInterceptor:
-                    description: ErrorInterceptor defines the configuration for intercepting
-                      and handling backend errors.
-                    properties:
-                      contentType:
-                        type: string
-                      enabled:
-                        description: Enabled, enable and disable backend errors interceptor
-                        type: boolean
-                      errors:
-                        description: Errors provides configuration for handling backend
-                          errors.
-                        items:
-                          properties:
-                            body:
-                              description: Body, contains error response custom body
-                              type: string
-                            code:
-                              type: integer
-                            status:
-                              description: Status contains the status code to intercept
-                              type: integer
-                          type: object
-                        type: array
-                    type: object
-                  idleTimeout:
-                    description: IdleTimeout defines the proxy's idle timeout in seconds.
-                    type: integer
                   logLevel:
-                    description: 'LogLevel specifies the logging level for the proxy.
-                      Accepted values: "info", "debug", "trace", "off".'
+                    default: info
+                    description: LogLevel sets the logging level (info, debug, trace,
+                      off).
+                    enum:
+                    - info
+                    - debug
+                    - trace
+                    - "off"
                     type: string
-                  readTimeout:
-                    description: ReadTimeout specifies the proxy's read timeout in
-                      seconds.
-                    type: integer
+                  monitoring:
+                    description: Monitoring defines metrics and health check configuration.
+                    properties:
+                      enableMetrics:
+                        default: false
+                        description: EnableMetrics enables Prometheus metrics collection.
+                        type: boolean
+                      host:
+                        description: |-
+                          Host restricts access to the monitoring endpoints (/metrics,
+                          /readyz, /healthz, /healthz/routes) to this hostname. When set,
+                          requests with a different Host header are rejected.
+                        type: string
+                      metricsPath:
+                        default: /metrics
+                        description: MetricsPath sets the path for the metrics endpoint.
+                        type: string
+                      middleware:
+                        description: |-
+                          Middleware attaches Goma Middleware CRs to the monitoring endpoints
+                          for authentication / access control (e.g. protect /metrics with a
+                          basic-auth or JWT middleware).
+                        properties:
+                          metrics:
+                            description: |-
+                              Metrics is the list of Middleware CR names applied to the /metrics
+                              endpoint. Useful for restricting Prometheus scraping to authenticated
+                              clients.
+                            items:
+                              type: string
+                            type: array
+                        type: object
+                    type: object
+                  networking:
+                    description: Networking defines transport and DNS cache settings.
+                    properties:
+                      dnsCache:
+                        description: DNSCache configures DNS caching.
+                        properties:
+                          ttl:
+                            description: TTL is the cache TTL in seconds.
+                            type: integer
+                        type: object
+                      transport:
+                        description: Transport configures HTTP transport settings.
+                        properties:
+                          maxConnsPerHost:
+                            default: 256
+                            description: MaxConnsPerHost limits total connections
+                              per host.
+                            type: integer
+                          maxIdleConns:
+                            default: 512
+                            description: MaxIdleConns controls the maximum number
+                              of idle connections.
+                            type: integer
+                          maxIdleConnsPerHost:
+                            default: 256
+                            description: MaxIdleConnsPerHost controls the maximum
+                              idle connections per host.
+                            type: integer
+                        type: object
+                    type: object
                   redis:
-                    description: Redis contains the configuration details for connecting
-                      to a Redis database.
+                    description: Redis contains the configuration for a Redis backend.
                     properties:
                       addr:
-                        description: 'Addr redis hostname and port number :'
+                        description: Addr is the Redis server address (host:port).
                         type: string
                       password:
+                        description: Password is the Redis password.
                         type: string
+                    required:
+                    - addr
+                    type: object
+                  timeouts:
+                    description: Timeouts defines server timeout settings in seconds.
+                    properties:
+                      idle:
+                        default: 90
+                        description: Idle timeout in seconds.
+                        type: integer
+                      read:
+                        default: 30
+                        description: Read timeout in seconds.
+                        type: integer
+                      write:
+                        default: 60
+                        description: Write timeout in seconds.
+                        type: integer
                     type: object
                   tls:
-                    description: TLS contains the TLS configuration for the proxy.
-                    properties:
-                      keys:
-                        description: Keys contains the list of TLS keys
-                        items:
-                          properties:
-                            tlsSecretName:
-                              type: string
-                          required:
-                          - tlsSecretName
-                          type: object
-                        type: array
-                    type: object
-                  tlsSecretName:
+                    description: TLS is a list of TLS certificate configurations via
+                      Kubernetes Secrets.
+                    items:
+                      description: TLSSpec references a Kubernetes TLS Secret.
+                      properties:
+                        secretName:
+                          description: SecretName is the name of a Kubernetes Secret
+                            of type kubernetes.io/tls.
+                          type: string
+                      required:
+                      - secretName
+                      type: object
+                    type: array
+                type: object
+              service:
+                description: |-
+                  Service configures the Kubernetes Service created for this gateway.
+                  Use this to expose the gateway externally (LoadBalancer / NodePort)
+                  and/or remap the Service ports (e.g. to the standard 80 / 443 for
+                  Ingress-style exposure). Container ports are unchanged (8080 / 8443).
+                properties:
+                  annotations:
+                    additionalProperties:
+                      type: string
                     description: |-
-                      TlsSecretName specifies the name of the secret containing the TLS certificate and key.
-                      Deprecated: Use TLS instead.
+                      Annotations are merged onto the Service (for provider-specific config
+                      like AWS NLB, GCP, MetalLB, etc.).
+                    type: object
+                  externalTrafficPolicy:
+                    description: |-
+                      ExternalTrafficPolicy: Cluster (default) or Local (preserves source IP,
+                      only routes to nodes with pods).
+                    enum:
+                    - Cluster
+                    - Local
                     type: string
-                  writeTimeout:
-                    description: WriteTimeout specifies the proxy's write timeout
-                      in seconds.
+                  httpNodePort:
+                    description: HTTPNodePort is the NodePort for HTTP (only honored
+                      when type=NodePort).
+                    format: int32
+                    maximum: 65535
+                    minimum: 0
                     type: integer
+                  httpPort:
+                    default: 8080
+                    description: |-
+                      HTTPPort is the external port for HTTP traffic (the Service port).
+                      Defaults to 8080 to match the gateway's container port. Set to 80
+                      for Ingress-style exposure.
+                    format: int32
+                    maximum: 65535
+                    minimum: 1
+                    type: integer
+                  httpsNodePort:
+                    description: HTTPSNodePort is the NodePort for HTTPS (only honored
+                      when type=NodePort).
+                    format: int32
+                    maximum: 65535
+                    minimum: 0
+                    type: integer
+                  httpsPort:
+                    default: 8443
+                    description: |-
+                      HTTPSPort is the external port for HTTPS traffic (the Service port).
+                      Defaults to 8443 to match the gateway's container port. Set to 443
+                      for Ingress-style exposure.
+                    format: int32
+                    maximum: 65535
+                    minimum: 1
+                    type: integer
+                  ipFamilies:
+                    description: IPFamilies is the list of IP families (IPv4, IPv6).
+                    items:
+                      description: |-
+                        IPFamily represents the IP Family (IPv4 or IPv6). This type is used
+                        to express the family of an IP expressed by a type (e.g. service.spec.ipFamilies).
+                      type: string
+                    type: array
+                  ipFamilyPolicy:
+                    description: 'IPFamilyPolicy: SingleStack, PreferDualStack, or
+                      RequireDualStack.'
+                    type: string
+                  labels:
+                    additionalProperties:
+                      type: string
+                    description: Labels are merged onto the Service.
+                    type: object
+                  loadBalancerClass:
+                    description: |-
+                      LoadBalancerClass selects a specific LB implementation
+                      (e.g. "service.k8s.aws/nlb").
+                    type: string
+                  loadBalancerIP:
+                    description: LoadBalancerIP requests a specific static IP (cloud-dependent).
+                    type: string
+                  loadBalancerSourceRanges:
+                    description: LoadBalancerSourceRanges restricts LoadBalancer access
+                      to specific CIDRs.
+                    items:
+                      type: string
+                    type: array
+                  sessionAffinity:
+                    description: 'SessionAffinity: None (default) or ClientIP.'
+                    enum:
+                    - None
+                    - ClientIP
+                    type: string
+                  type:
+                    default: ClusterIP
+                    description: 'Type is the Service type: ClusterIP, NodePort, or
+                      LoadBalancer.'
+                    enum:
+                    - ClusterIP
+                    - NodePort
+                    - LoadBalancer
+                    type: string
                 type: object
             type: object
           status:
             description: GatewayStatus defines the observed state of Gateway.
             properties:
+              addresses:
+                description: |-
+                  Addresses is the list of addresses at which the gateway is reachable.
+                  Populated from the Service status (LoadBalancer ingress, external IPs,
+                  node IPs with NodePort, or cluster IP depending on Service type).
+                items:
+                  description: GatewayAddress is a single reachable address for the
+                    gateway.
+                  properties:
+                    type:
+                      description: 'Type is the address type: "IPAddress" or "Hostname".'
+                      enum:
+                      - IPAddress
+                      - Hostname
+                      type: string
+                    value:
+                      description: Value is the address itself (IP literal or DNS
+                        name).
+                      type: string
+                  required:
+                  - type
+                  - value
+                  type: object
+                type: array
               conditions:
+                description: Conditions represent the latest available observations
+                  of the Gateway's state.
                 items:
                   description: Condition contains details for one aspect of the current
                     state of this API Resource.
@@ -1259,10 +1605,26 @@ spec:
                   - type
                   type: object
                 type: array
+              configChecksum:
+                description: ConfigChecksum is the SHA256 checksum of the generated
+                  config.
+                type: string
+              middlewares:
+                description: Middlewares is the number of Middleware CRs referenced
+                  by the routes.
+                format: int32
+                type: integer
+              readyReplicas:
+                description: ReadyReplicas is the number of ready gateway pods.
+                format: int32
+                type: integer
               replicas:
+                description: Replicas is the current number of gateway pods.
                 format: int32
                 type: integer
               routes:
+                description: Routes is the number of Route CRs associated with this
+                  gateway.
                 format: int32
                 type: integer
             type: object
@@ -1277,9 +1639,9 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.16.4
-  name: middlewares.gomaproj.github.io
+  name: middlewares.gateway.jkaninda.dev
 spec:
-  group: gomaproj.github.io
+  group: gateway.jkaninda.dev
   names:
     kind: Middleware
     listKind: MiddlewareList
@@ -1287,7 +1649,17 @@ spec:
     singular: middleware
   scope: Namespaced
   versions:
-  - name: v1beta1
+  - additionalPrinterColumns:
+    - jsonPath: .spec.type
+      name: Type
+      type: string
+    - jsonPath: .status.ready
+      name: Ready
+      type: boolean
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    name: v1alpha1
     schema:
       openAPIV3Schema:
         description: Middleware is the Schema for the middlewares API.
@@ -1310,40 +1682,113 @@ spec:
           metadata:
             type: object
           spec:
-            description: MiddlewareSpec defines the desired configuration for middleware
-              in the system.
+            description: MiddlewareSpec defines the desired state of Middleware.
             properties:
               paths:
-                description: |-
-                  Paths defines the list of paths to which the middleware will be applied.
-                  These paths will be protected by the middleware specified in the 'Type' field.
+                description: Paths lists the route paths this middleware protects.
                 items:
                   type: string
                 type: array
               rule:
                 description: |-
-                  Rule contains the specific rule or configuration for the middleware.
-                  This field allows for flexible rule configurations, such as access control or rate limiting.
-                  It is represented as a RawExtension to accommodate different formats.
-                  The content of this field depends on the middleware type and is optional.
-                type: object
+                  Rule contains the type-specific middleware configuration.
+                  The structure depends on the middleware Type.
                 x-kubernetes-preserve-unknown-fields: true
               type:
-                description: |-
-                  Type specifies the type of middleware to be applied.
-                  Available values:
-                  - "basic": Basic authentication.
-                  - "jwt": JSON Web Token (JWT) authentication.
-                  - "auth": Authentication using Auth0 service.
-                  - "rateLimit": Middleware for rate-limiting requests.
-                  - "access": General access control middleware.
-                  - "accessPolicy": Middleware for IP-based access policies.
+                description: Type indicates the middleware type.
+                enum:
+                - basic
+                - jwt
+                - oauth
+                - rateLimit
+                - access
+                - accessPolicy
+                - addPrefix
+                - redirectRegex
+                - rewriteRegex
+                - forwardAuth
+                - httpCache
+                - redirectScheme
+                - bodyLimit
+                - responseHeaders
+                - errorInterceptor
+                - ldap
+                - userAgentBlock
                 type: string
             required:
             - type
             type: object
           status:
             description: MiddlewareStatus defines the observed state of Middleware.
+            properties:
+              conditions:
+                description: Conditions represent the latest available observations
+                  of the Middleware's state.
+                items:
+                  description: Condition contains details for one aspect of the current
+                    state of this API Resource.
+                  properties:
+                    lastTransitionTime:
+                      description: |-
+                        lastTransitionTime is the last time the condition transitioned from one status to another.
+                        This should be when the underlying condition changed.  If that is not known, then using the time when the API field changed is acceptable.
+                      format: date-time
+                      type: string
+                    message:
+                      description: |-
+                        message is a human readable message indicating details about the transition.
+                        This may be an empty string.
+                      maxLength: 32768
+                      type: string
+                    observedGeneration:
+                      description: |-
+                        observedGeneration represents the .metadata.generation that the condition was set based upon.
+                        For instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date
+                        with respect to the current state of the instance.
+                      format: int64
+                      minimum: 0
+                      type: integer
+                    reason:
+                      description: |-
+                        reason contains a programmatic identifier indicating the reason for the condition's last transition.
+                        Producers of specific condition types may define expected values and meanings for this field,
+                        and whether the values are considered a guaranteed API.
+                        The value should be a CamelCase string.
+                        This field may not be empty.
+                      maxLength: 1024
+                      minLength: 1
+                      pattern: ^[A-Za-z]([A-Za-z0-9_,:]*[A-Za-z0-9_])?$
+                      type: string
+                    status:
+                      description: status of the condition, one of True, False, Unknown.
+                      enum:
+                      - "True"
+                      - "False"
+                      - Unknown
+                      type: string
+                    type:
+                      description: type of condition in CamelCase or in foo.example.com/CamelCase.
+                      maxLength: 316
+                      pattern: ^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$
+                      type: string
+                  required:
+                  - lastTransitionTime
+                  - message
+                  - reason
+                  - status
+                  - type
+                  type: object
+                type: array
+              ready:
+                description: Ready indicates whether the middleware configuration
+                  is valid.
+                type: boolean
+              referencedBy:
+                description: ReferencedBy lists the names of Routes that use this
+                  middleware.
+                items:
+                  type: string
+                type: array
             type: object
         type: object
     served: true
@@ -1356,9 +1801,9 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.16.4
-  name: routes.gomaproj.github.io
+  name: routes.gateway.jkaninda.dev
 spec:
-  group: gomaproj.github.io
+  group: gateway.jkaninda.dev
   names:
     kind: Route
     listKind: RouteList
@@ -1366,7 +1811,23 @@ spec:
     singular: route
   scope: Namespaced
   versions:
-  - name: v1beta1
+  - additionalPrinterColumns:
+    - jsonPath: .spec.gateways
+      name: Gateways
+      type: string
+    - jsonPath: .spec.path
+      name: Path
+      type: string
+    - jsonPath: .spec.target
+      name: Target
+      type: string
+    - jsonPath: .status.ready
+      name: Ready
+      type: boolean
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    name: v1alpha1
     schema:
       openAPIV3Schema:
         description: Route is the Schema for the routes API.
@@ -1389,138 +1850,285 @@ spec:
           metadata:
             type: object
           spec:
-            description: RouteSpec defines the desired state of a route.
+            description: RouteSpec defines the desired state of Route.
             properties:
               backends:
-                description: Backends specifies a list of backend URLs for load balancing.
+                description: Backends defines multiple backend servers for load balancing.
                 items:
-                  description: Backend defines backend server to route traffic to
+                  description: BackendSpec defines a backend server for load balancing.
                   properties:
                     endpoint:
-                      description: Endpoint defines the endpoint of the backend
+                      description: Endpoint is the backend URL.
                       type: string
+                    exclusive:
+                      description: |-
+                        Exclusive, when true, restricts this backend to traffic that
+                        satisfies its Match rules — unmatched requests are never sent here,
+                        even during load balancing. When false (default), matching requests
+                        are pinned but the backend still participates in the general pool.
+                      type: boolean
+                    match:
+                      description: |-
+                        Match defines request conditions that pin traffic to this backend
+                        (e.g. route a header/cookie/query/IP to a specific backend). All
+                        entries must match (AND).
+                      items:
+                        description: BackendMatchSpec is a single request-matching
+                          condition for a Backend.
+                        properties:
+                          name:
+                            description: Name of the header/cookie/query parameter
+                              (ignored for source=ip).
+                            type: string
+                          operator:
+                            description: Operator is the comparison applied between
+                              the source value and Value.
+                            enum:
+                            - equals
+                            - not_equals
+                            - contains
+                            - not_contains
+                            - starts_with
+                            - ends_with
+                            - regex
+                            - in
+                            type: string
+                          source:
+                            description: Source is the part of the request to inspect.
+                            enum:
+                            - header
+                            - cookie
+                            - query
+                            - ip
+                            type: string
+                          value:
+                            description: Value to compare against. For operator=in,
+                              use a comma-separated list.
+                            type: string
+                        required:
+                        - operator
+                        - source
+                        - value
+                        type: object
+                      type: array
                     weight:
-                      description: Weight defines Weight for weighted algorithm, it
-                        optional
+                      description: Weight is the load balancing weight.
                       type: integer
                   required:
                   - endpoint
                   type: object
                 type: array
-              blockCommonExploits:
-                description: BlockCommonExploits enables or disables blocking common
-                  exploits, such as basic SQL injection or XSS attempts.
+              disableMetrics:
+                description: |-
+                  DisableMetrics disables Prometheus metrics collection for this route.
+                  Useful for silencing high-volume or low-value endpoints (health probes,
+                  static assets) from per-route metric series.
                 type: boolean
-              cors:
-                description: Cors specifies the CORS (Cross-Origin Resource Sharing)
-                  configuration for the route.
-                properties:
-                  headers:
-                    additionalProperties:
-                      type: string
-                    description: Headers contains custom headers
-                    type: object
-                  origins:
-                    description: Cors contains Allowed origins,
-                    items:
-                      type: string
-                    type: array
-                type: object
-              destination:
-                description: Destination defines the backend URL to which requests
-                  will be proxied.
-                type: string
-              disableHostForwarding:
-                description: DisableHostForwarding disables forwarding the host header
-                  to the backend.
+              enabled:
+                default: true
+                description: Enabled controls whether the route is active.
                 type: boolean
-              disabled:
-                description: Disabled specifies whether the route is disabled.
-                type: boolean
-              enableBotDetection:
-                description: EnableBotDetection enables or disables bot detection.
-                type: boolean
-              errorInterceptor:
-                description: ErrorInterceptor defines the configuration for handling
-                  backend error interception.
-                properties:
-                  contentType:
-                    type: string
-                  enabled:
-                    description: Enabled, enable and disable backend errors interceptor
-                    type: boolean
-                  errors:
-                    description: Errors provides configuration for handling backend
-                      errors.
-                    items:
-                      properties:
-                        body:
-                          description: Body, contains error response custom body
-                          type: string
-                        code:
-                          type: integer
-                        status:
-                          description: Status contains the status code to intercept
-                          type: integer
-                      type: object
-                    type: array
-                type: object
-              gateway:
-                description: Gateway specifies the name of the Gateway resource associated
-                  with this route.
-                type: string
+              gateways:
+                description: |-
+                  Gateways is the list of Gateway CR names this route is attached to
+                  (same namespace). A route may be consumed by one or more gateways.
+                items:
+                  type: string
+                minItems: 1
+                type: array
               healthCheck:
-                description: HealthCheck defines the settings for backend health checks.
+                description: HealthCheck configures backend health monitoring.
                 properties:
                   healthyStatuses:
+                    description: HealthyStatuses is the list of HTTP status codes
+                      considered healthy.
                     items:
                       type: integer
                     type: array
                   interval:
+                    default: 30s
+                    description: Interval is the check interval (e.g., "30s").
                     type: string
                   path:
+                    description: Path is the health check endpoint path.
                     type: string
                   timeout:
+                    default: 5s
+                    description: Timeout is the check timeout (e.g., "5s").
                     type: string
+                required:
+                - path
                 type: object
               hosts:
-                description: Hosts defines a list of domains or hosts for host-based
-                  request routing.
+                description: Hosts lists domains for host-based routing.
                 items:
                   type: string
                 type: array
-              insecureSkipVerify:
-                description: InsecureSkipVerify allows skipping TLS certificate verification
-                  for backend connections.
-                type: boolean
+              maintenance:
+                description: Maintenance puts the route into maintenance mode.
+                properties:
+                  body:
+                    description: Body is the response body returned during maintenance.
+                    type: string
+                  enabled:
+                    description: Enabled controls whether maintenance mode is active.
+                    type: boolean
+                  status:
+                    default: 503
+                    description: Status is the HTTP status code returned during maintenance.
+                    type: integer
+                required:
+                - enabled
+                type: object
               methods:
-                description: Methods specifies the HTTP methods allowed for this route
-                  (e.g., GET, POST, PUT).
+                description: Methods lists the HTTP methods allowed for this route.
                 items:
                   type: string
                 type: array
               middlewares:
-                description: Middlewares specifies a list of middleware names to apply
-                  to this route.
+                description: Middlewares lists Middleware CR names to apply to this
+                  route.
                 items:
                   type: string
                 type: array
               path:
-                description: Path specifies the route path.
+                description: Path is the URL path for this route.
+                minLength: 1
                 type: string
               priority:
-                description: Route order priority
+                description: Priority determines route matching order (higher = matched
+                  first).
                 type: integer
               rewrite:
-                description: Rewrite specifies the new path to rewrite the incoming
-                  route path to.
+                description: Rewrite rewrites the incoming request path.
                 type: string
+              security:
+                description: Security defines route-level security settings.
+                properties:
+                  enableExploitProtection:
+                    description: EnableExploitProtection enables SQL injection and
+                      XSS protection.
+                    type: boolean
+                  forwardHostHeaders:
+                    default: true
+                    description: ForwardHostHeaders controls forwarding of X-Forwarded-Host
+                      and related headers.
+                    type: boolean
+                  tls:
+                    description: TLS defines route-level TLS settings for backend
+                      connections.
+                    properties:
+                      clientCertSecret:
+                        description: ClientCertSecret is the name of a K8s TLS Secret
+                          for mTLS client certificates.
+                        type: string
+                      insecureSkipVerify:
+                        description: InsecureSkipVerify disables TLS verification
+                          for the backend.
+                        type: boolean
+                      rootCAsSecret:
+                        description: RootCAsSecret is the name of a K8s Secret containing
+                          CA certificates.
+                        type: string
+                    type: object
+                type: object
+              target:
+                description: Target is the backend URL for this route.
+                type: string
+              tls:
+                description: |-
+                  TLS references a Kubernetes TLS Secret (type kubernetes.io/tls) whose
+                  certificate is served for this route's hosts. When the sidecar is
+                  enabled, the cert/key are written to disk and hot-reloaded into the
+                  gateway without a pod restart. This is the per-route serving
+                  certificate — for backend (upstream) TLS settings see Security.TLS.
+                properties:
+                  secretName:
+                    description: |-
+                      SecretName is the name of a kubernetes.io/tls Secret in the same
+                      namespace as the Route. The gateway will serve this certificate for
+                      the route's hosts.
+                    type: string
+                required:
+                - secretName
+                type: object
             required:
-            - gateway
+            - gateways
             - path
             type: object
           status:
             description: RouteStatus defines the observed state of Route.
+            properties:
+              conditions:
+                description: Conditions represent the latest available observations
+                  of the Route's state.
+                items:
+                  description: Condition contains details for one aspect of the current
+                    state of this API Resource.
+                  properties:
+                    lastTransitionTime:
+                      description: |-
+                        lastTransitionTime is the last time the condition transitioned from one status to another.
+                        This should be when the underlying condition changed.  If that is not known, then using the time when the API field changed is acceptable.
+                      format: date-time
+                      type: string
+                    message:
+                      description: |-
+                        message is a human readable message indicating details about the transition.
+                        This may be an empty string.
+                      maxLength: 32768
+                      type: string
+                    observedGeneration:
+                      description: |-
+                        observedGeneration represents the .metadata.generation that the condition was set based upon.
+                        For instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date
+                        with respect to the current state of the instance.
+                      format: int64
+                      minimum: 0
+                      type: integer
+                    reason:
+                      description: |-
+                        reason contains a programmatic identifier indicating the reason for the condition's last transition.
+                        Producers of specific condition types may define expected values and meanings for this field,
+                        and whether the values are considered a guaranteed API.
+                        The value should be a CamelCase string.
+                        This field may not be empty.
+                      maxLength: 1024
+                      minLength: 1
+                      pattern: ^[A-Za-z]([A-Za-z0-9_,:]*[A-Za-z0-9_])?$
+                      type: string
+                    status:
+                      description: status of the condition, one of True, False, Unknown.
+                      enum:
+                      - "True"
+                      - "False"
+                      - Unknown
+                      type: string
+                    type:
+                      description: type of condition in CamelCase or in foo.example.com/CamelCase.
+                      maxLength: 316
+                      pattern: ^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$
+                      type: string
+                  required:
+                  - lastTransitionTime
+                  - message
+                  - reason
+                  - status
+                  - type
+                  type: object
+                type: array
+              gatewayGeneration:
+                description: GatewayGeneration tracks which Gateway config generation
+                  includes this route.
+                format: int64
+                type: integer
+              ready:
+                description: Ready indicates whether the route is valid and synced.
+                type: boolean
+              synced:
+                description: Synced indicates whether the route config has been written
+                  to the Gateway's ConfigMap.
+                type: boolean
             type: object
         type: object
     served: true
@@ -1587,7 +2195,7 @@ metadata:
   name: goma-operator-gateway-editor-role
 rules:
 - apiGroups:
-  - gomaproj.github.io
+  - gateway.jkaninda.dev
   resources:
   - gateways
   verbs:
@@ -1599,7 +2207,7 @@ rules:
   - update
   - watch
 - apiGroups:
-  - gomaproj.github.io
+  - gateway.jkaninda.dev
   resources:
   - gateways/status
   verbs:
@@ -1614,7 +2222,7 @@ metadata:
   name: goma-operator-gateway-viewer-role
 rules:
 - apiGroups:
-  - gomaproj.github.io
+  - gateway.jkaninda.dev
   resources:
   - gateways
   verbs:
@@ -1622,7 +2230,7 @@ rules:
   - list
   - watch
 - apiGroups:
-  - gomaproj.github.io
+  - gateway.jkaninda.dev
   resources:
   - gateways/status
   verbs:
@@ -1637,6 +2245,8 @@ rules:
   - ""
   resources:
   - configmaps
+  - secrets
+  - serviceaccounts
   - services
   verbs:
   - create
@@ -1646,14 +2256,6 @@ rules:
   - patch
   - update
   - watch
-- apiGroups:
-  - ""
-  resources:
-  - events
-  verbs:
-  - create
-  - patch
-  - update
 - apiGroups:
   - apps
   resources:
@@ -1679,7 +2281,7 @@ rules:
   - update
   - watch
 - apiGroups:
-  - gomaproj.github.io
+  - gateway.jkaninda.dev
   resources:
   - gateways
   - middlewares
@@ -1693,7 +2295,7 @@ rules:
   - update
   - watch
 - apiGroups:
-  - gomaproj.github.io
+  - gateway.jkaninda.dev
   resources:
   - gateways/finalizers
   - middlewares/finalizers
@@ -1701,7 +2303,7 @@ rules:
   verbs:
   - update
 - apiGroups:
-  - gomaproj.github.io
+  - gateway.jkaninda.dev
   resources:
   - gateways/status
   - middlewares/status
@@ -1710,6 +2312,19 @@ rules:
   - get
   - patch
   - update
+- apiGroups:
+  - rbac.authorization.k8s.io
+  resources:
+  - rolebindings
+  - roles
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
@@ -1748,7 +2363,7 @@ metadata:
   name: goma-operator-middleware-editor-role
 rules:
 - apiGroups:
-  - gomaproj.github.io
+  - gateway.jkaninda.dev
   resources:
   - middlewares
   verbs:
@@ -1760,7 +2375,7 @@ rules:
   - update
   - watch
 - apiGroups:
-  - gomaproj.github.io
+  - gateway.jkaninda.dev
   resources:
   - middlewares/status
   verbs:
@@ -1775,7 +2390,7 @@ metadata:
   name: goma-operator-middleware-viewer-role
 rules:
 - apiGroups:
-  - gomaproj.github.io
+  - gateway.jkaninda.dev
   resources:
   - middlewares
   verbs:
@@ -1783,7 +2398,7 @@ rules:
   - list
   - watch
 - apiGroups:
-  - gomaproj.github.io
+  - gateway.jkaninda.dev
   resources:
   - middlewares/status
   verbs:
@@ -1798,7 +2413,7 @@ metadata:
   name: goma-operator-route-editor-role
 rules:
 - apiGroups:
-  - gomaproj.github.io
+  - gateway.jkaninda.dev
   resources:
   - routes
   verbs:
@@ -1810,7 +2425,7 @@ rules:
   - update
   - watch
 - apiGroups:
-  - gomaproj.github.io
+  - gateway.jkaninda.dev
   resources:
   - routes/status
   verbs:
@@ -1825,7 +2440,7 @@ metadata:
   name: goma-operator-route-viewer-role
 rules:
 - apiGroups:
-  - gomaproj.github.io
+  - gateway.jkaninda.dev
   resources:
   - routes
   verbs:
@@ -1833,7 +2448,7 @@ rules:
   - list
   - watch
 - apiGroups:
-  - gomaproj.github.io
+  - gateway.jkaninda.dev
   resources:
   - routes/status
   verbs:
@@ -1931,7 +2546,7 @@ spec:
         - --health-probe-bind-address=:8081
         command:
         - /manager
-        image: jkaninda/goma-operator:0.1.4
+        image: jkaninda/goma-operator:latest
         livenessProbe:
           httpGet:
             path: /healthz
@@ -1948,10 +2563,10 @@ spec:
         resources:
           limits:
             cpu: 500m
-            memory: 512Mi
-          requests:
-            cpu: 50m
             memory: 128Mi
+          requests:
+            cpu: 10m
+            memory: 64Mi
         securityContext:
           allowPrivilegeEscalation: false
           capabilities:

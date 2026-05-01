@@ -1,0 +1,19 @@
+# Simple host-based Route attached to the "gateway" Gateway CR.
+apiVersion: gateway.jkaninda.dev/v1alpha1
+kind: Route
+metadata:
+  name: api
+  namespace: default
+spec:
+  gateways:
+    - gateway
+  path: /
+  hosts:
+    - api.example.com
+  target: http://api-service.default.svc.cluster.local:8080
+  methods:
+    - GET
+    - POST
+    - PUT
+    - DELETE
+  enabled: true

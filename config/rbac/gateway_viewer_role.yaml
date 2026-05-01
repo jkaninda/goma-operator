@@ -8,7 +8,7 @@ metadata:
   name: gateway-viewer-role
 rules:
 - apiGroups:
-  - gomaproj.github.io
+  - gateway.jkaninda.dev
   resources:
   - gateways
   verbs:
@@ -16,7 +16,7 @@ rules:
   - list
   - watch
 - apiGroups:
-  - gomaproj.github.io
+  - gateway.jkaninda.dev
   resources:
   - gateways/status
   verbs:

@@ -1,0 +1,30 @@
+# Basic-auth middleware. Passwords must be bcrypt-hashed.
+# Generate with: htpasswd -nbB admin 's3cret'
+apiVersion: gateway.jkaninda.dev/v1alpha1
+kind: Middleware
+metadata:
+  name: admin-basic-auth
+  namespace: default
+spec:
+  type: basic
+  paths:
+    - /admin
+  rule:
+    realm: "admin"
+    users:
+      - "admin:$2a$12$EXAMPLEHASHREPLACEME.................."
+---
+apiVersion: gateway.jkaninda.dev/v1alpha1
+kind: Route
+metadata:
+  name: admin
+  namespace: default
+spec:
+  gateways:
+    - gateway
+  path: /admin
+  hosts:
+    - app.example.com
+  target: http://admin.default.svc.cluster.local:8080
+  middlewares:
+    - admin-basic-auth

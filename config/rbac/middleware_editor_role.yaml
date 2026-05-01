@@ -8,7 +8,7 @@ metadata:
   name: middleware-editor-role
 rules:
 - apiGroups:
-  - gomaproj.github.io
+  - gateway.jkaninda.dev
   resources:
   - middlewares
   verbs:
@@ -20,7 +20,7 @@ rules:
   - update
   - watch
 - apiGroups:
-  - gomaproj.github.io
+  - gateway.jkaninda.dev
   resources:
   - middlewares/status
   verbs:
