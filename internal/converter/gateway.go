@@ -30,6 +30,8 @@ const (
 //	gateway:
 //	  timeouts, tls, redis, monitoring, log, networking, providers, routes
 //	middlewares: [...]
+//
+// nolint:gocyclo
 func GatewayConfigFromCRs(gw *gatewayv1alpha1.Gateway, routes []gatewayv1alpha1.Route, middlewares []gatewayv1alpha1.Middleware) config.GatewayConfig {
 	cfg := config.GatewayConfig{}
 

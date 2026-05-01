@@ -51,7 +51,9 @@ var _ = Describe("Middleware Controller", func() {
 						Name:      resourceName,
 						Namespace: "default",
 					},
-					// TODO(user): Specify other spec details if needed.
+					Spec: gatewayv1alpha1.MiddlewareSpec{
+						Type: "basic",
+					},
 				}
 				Expect(k8sClient.Create(ctx, resource)).To(Succeed())
 			}
